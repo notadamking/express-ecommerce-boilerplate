@@ -1,0 +1,19 @@
+<h1>{{title}}</h1>
+<table class="ak-table">
+  <tr>
+    <th>ID</th>
+    <th>Cart</th>
+    <th>User</th>
+    <th>Subtotal</th>
+    <th>Taxes</th>
+    <th>Shipping</th>
+    <th>Discounts</th>
+    <th>Total</th>
+    <th>Status</th>
+    <th>Created</th>
+    <th>Updated</th>
+  <tr>
+{{#each orders}}
+  {{> order}}
+{{/each}}
+</table>

@@ -1,0 +1,60 @@
+<h1>{{title}}</h1>
+<h2>Saved Addresses</h2>
+{{> address_form 'ak-hidden ak-form'}}
+<h3>Default Shipping Address: {{user.default_address}}</h3>
+
+{{#each addresses}}
+  <div class="ak-border">
+    <h4>{{this.nickname}}</h4>
+    <ul id="readable-{{this.id}}" class="ak-ul">
+      <li>{{this.first_name}} {{this.last_name}}</li>
+      <li>{{this.street_line_1}}</li>
+      <li>{{this.street_line_2}}</li>
+      <li>{{this.city}}, {{this.state}} {{this.zip_code}}</li>
+      <li>{{this.country}}</li>
+    </ul>
+    <form id="submit-changes-{{this.id}}" class="ak-hidden ak-form" method="POST" action="/user/addresses/{{this.id}}?_method=PUT">
+      <label for="nickname">Nickname</label>
+      <input type="text" name="nickname" placeholder="Nickname (optional)" value="{{this.nickname}}"/>
+      <label for="first_name">First Name</label>
+      <input type="text" name="first_name" placeholder="First Name" value="{{this.first_name}}"/>
+      <label for="last_name">Last Name</label>
+      <input type="text" name="last_name" placeholder="Last Name" value="{{this.last_name}}"/>
+      <label for="street_line_1">Street Line 1</label>
+      <input type="text" name="street_line_1" value="{{this.street_line_1}}"/>
+      <label for="street_line_2">Street Line 2</label>
+      <input type="text" name="street_line_2" value="{{this.street_line_2}}"/>
+      <label for="city">City</label>
+      <input type="text" name="city" value="{{this.city}}"/>
+      <label for="state">State</label>
+      <input type="text" name="state" value="{{this.state}}"/>
+      <label for="zip-code">Zip Code</label>
+      <input type="text" name="zip_code" value="{{this.zip_code}}"/>
+      <label for="country">Country</label>
+      <input type="text" name="country" value="{{this.country}}"/>
+      <label for="default_address">Default Shipping</label>
+      <input type="checkbox" name="default_address" {{#unless default_address}} checked {{/unless}}/>
+      <input type="submit" value="Submit Changes"/>
+    </form>
+    <form method="POST" action="/user/addresses/{{this.id}}?_method=PUT">
+      <input type="hidden" name="default_address" value="true"/>
+      <input type="hidden" name="nickname" value="{{this.nickname}}"/>
+      <input type="hidden" name="first_name" value="{{this.first_name}}"/>
+      <input type="hidden" name="last_name" value="{{this.last_name}}"/>
+      <input type="hidden" name="street_line_1" value="{{this.street_line_1}}"/>
+      <input type="hidden" name="street_line_2" value="{{this.street_line_2}}"/>
+      <input type="hidden" name="city" value="{{this.city}}"/>
+      <input type="hidden" name="state" value="{{this.state}}"/>
+      <input type="hidden" name="zip_code" value="{{this.zip_code}}"/>
+      <input type="hidden" name="country" value="{{this.country}}"/>
+      <input type="submit" value="Make Default Address">
+    </form>
+    <button onclick="$(this).hide(); $('#submit-changes-{{this.id}}').show(); $('#readable-{{this.id}}').hide();">Edit Address</button>
+    <form method="POST" action="/user/addresses/{{this.id}}?_method=DELETE">
+      <input type="submit" value="Remove Address"/>
+    </form>
+  </div>
+{{else}}
+  <p>You have no addresses saved.</p>
+{{/each}}
+<button onclick="$('#new-address-form').show();">Add New Address</button>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width">
+  <title>{{title }}</title>
+  <link rel="stylesheet" href="/css/style.css">
+  {{#if ENV_DEVELOPMENT}}
+    <script src="http://localhost:35729/livereload.js"></script>
+  {{/if}}
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+  <script src="https://js.braintreegateway.com/v2/braintree.js"></script>
+</head>
+<body>
+  <ul class="nav">
+    <li><a href="/">Home</a></li>
+    <li><a href="/products">Products</a></li>
+    <li><a href="/cart">Cart</a></li>
+    {{#if user}}
+      <li>Logged in as <a href="/user/profile">{{user.email}}</a></li>
+      <li><a href="/logout">Logout</a></li>
+    {{else}}
+      <li><a href="/login">Login</a></li>
+      <li><a href="/register">Register</a></li>
+    {{/if}}
+    <form method="GET" action="/orders/">
+        <li><input type="text" name="order_id" placeholder="Enter order id..."/></li>
+        <li><input type="submit" value="Find Order"/></li>
+    </form>
+  </ul>
+  {{#each messages.info}}
+    <p>{{this}}</p>
+  {{/each}}
+  {{#each messages.error}}
+    <p>{{this}}</p>
+  {{/each}}
+  {{{body}}}
+</body>
+</html>

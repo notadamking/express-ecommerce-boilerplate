@@ -1,0 +1,65 @@
+<h1>{{title}}</h1>
+<h2>Enter your payment information</h2>
+<form id="checkout" method="POST" action="">
+  <input type="hidden" name="order_id" value="{{order.id}}"/>
+  <div id="payment-form"></div>
+  <input type="checkbox" id="use-shipping-address" name="use_shipping_address" checked>
+  <label for="use-shipping-address">Billing address same as shipping?</label> </br>
+  <input type="hidden" name="shipping_address_id" value="{{order.shipping.address.id}}"/>
+
+  <div id="billing-address-form" class="ak-hidden ak-form">
+    <h2>Choose your billing address</h2>
+    {{#each addresses}}
+      <input type="radio" name="address_id" value="{{this.id}}"
+        {{#unless default_address_id}}
+          {{#if @first}}checked{{/if}}
+        {{/unless}}
+        {{#ifCond default_address_id '==' this.id}}checked{{/ifCond}}
+      />
+      <label for="address_id">{{this.displayAddress}}</label>
+      <button>Edit</button>
+    {{/each}}
+    {{#if addresses}}
+    <h3>- OR -</h3>
+    {{/if}}
+    <input type="radio" id="new_address_radio" name="address_id" value="new" {{#unless addresses}}checked{{/unless}}/>
+    <label for="address_id">Bill to a new address</label>
+    <div id="new_address_form" class="{{#if addresses}}ak-hidden{{/if}} ak-form">
+      <input type="text" name="nickname" placeholder="Nickname for Address"/>
+      <input type="text" name="first_name" placeholder="First Name"/>
+      <input type="text" name="last_name" placeholder="Last Name"/>
+      <input type="text" name="street_line_1" placeholder="Street Line 1"/>
+      <input type="text" name="street_line_2" placeholder="Street Line 2"/>
+      <input type="text" name="city" placeholder="City"/>
+      <input type="text" name="state" placeholder="State"/>
+      <input type="text" name="zip_code" placeholder="Zip Code"/>
+      <input type="text" name="country" placeholder="Country"/>
+    </div>
+  </div>
+  <input type="submit" value="Continue to Review Order"/>
+</form>
+
+<script>
+  var clientToken = '{{client_token}}';
+
+  braintree.setup(clientToken, "dropin", {
+    container: "payment-form"
+  });
+
+  $(document).ready(function () {
+    $('#use-shipping-address').click(function () {
+      if($('#use-shipping-address').prop('checked')) {
+        $('#billing-address-form').hide();
+      } else {
+        $('#billing-address-form').show();
+      }
+    });
+    $("input[name=address_id]:radio").change(function () {
+      if ($("#new_address_radio").prop('checked')) {
+        $('#new_address_form').show();
+      } else {
+        $('#new_address_form').hide();
+      }
+    })
+  });
+</script>

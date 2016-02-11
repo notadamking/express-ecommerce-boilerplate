@@ -1,0 +1,38 @@
+.nav {
+  list-style-type: none;
+}
+
+.nav > li {
+  display: inline;
+  padding: 10px 10px;
+}
+
+.nav > form > li {
+  display: inline;
+}
+
+.ak-table {
+  border-collapse: collapse;
+}
+.ak-table, th, td {
+  border: 1px solid black;
+}
+.add-product-form > input {
+  display: block;
+  margin: 10px;
+}
+.ak-hidden {
+  display: none;
+}
+.ak-border {
+  border: 1px solid black;
+}
+.ak-ul {
+  list-style-type: none;
+}
+.ak-form > input {
+  display: block;
+}
+.ak-inactive {
+  opacity: .4;
+}

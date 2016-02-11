@@ -1,0 +1,82 @@
+Products:
+  ✔ All visitors should be able to view all products @done(2016-01-27 11:05) @project(Products)
+  ✔ All visitors should be able to view products by category @done(2016-01-28 18:05) @project(Products)
+  ✔ All visitors should be able to search products @done(2016-02-03 01:08) @project(Products)
+    ☐ Advanced search options should be available
+    ✔ Simple search by product name should be available @done(2016-02-03 14:37) @project(Products)
+  ✔ All visitors should be able to add a product to their cart @done(2016-01-28 17:28) @project(Products)
+    ☐ Adding a product to cart should open a mini cart
+      ☐ Mini cart should indicate which item was just added to cart
+      ☐ Mini cart should have upsell items
+      ☐ Mini cart should have checkout button that stands out
+      ☐ Mini cart should be able to show all items in cart
+  ☐ All visitors should be able to easily see product images
+  ☐ All visitors should be able to view different variations of a product
+  ☐ All visitors should be able to see similar products
+
+Cart:
+  ✔ Users/Guests should be able to view their cart @done(2016-01-27 11:23) @project(Users / User Carts)
+  ✔ Users/Guests should be able to remove items from their cart @done(2016-01-28 15:58) @project(Cart)
+  ✔ Users/Guests should be able to edit item quantities in their cart @done(2016-01-28 15:59) @project(Cart)
+  ✔ Users/Guests should be able to move to check out with their cart @done(2016-01-28 17:28) @project(Cart)
+    ✔ Guest checkout should require email address only @done(2016-02-03 01:08) @project(Cart)
+  ✔ Guests should be able to log in and add their guest cart to the user cart @done(2016-02-10 14:53) @project(Cart)
+
+
+Checkout:
+  ✔ All visitors should be able to checkout @done(2016-02-03 01:09) @project(Checkout)
+  ✔ All visitors should be able to use coupons  @done(2016-02-04 21:32) @project(Checkout)
+  ✔ All visitors should be able to enter shipping information @done(2016-02-03 01:09) @project(Checkout)
+  ✔ All visitors should be able to enter billing information @done(2016-02-03 01:09) @project(Checkout)
+  ✔ All visitors should be able to add a payment method @done(2016-02-03 01:09) @project(Checkout)
+    ✔ PayPal @done(2016-02-03 14:37) @project(Checkout)
+    ✔ Credit Card @done(2016-02-03 01:09) @project(Checkout)
+  ☐ Users should be able to save / use a saved a payment method
+  ✔ Users should be given / checked for a checkout token @done(2016-02-11 10:47) @project(Checkout)
+    ✔ Users should be have to log back in if checkout expiration time has passed @done(2016-02-11 10:47) @project(Checkout)
+
+
+Orders:
+  ✔ Users should be able to view their orders @done(2016-02-03 01:09) @project(Orders)
+  ✔ Guests should be able to view their orders by order id @done(2016-02-03 14:37) @project(Orders)
+  ☐ Users should be able to change a shipping address if the order has not shipped
+  ☐ Users should be able to cancel an order if it has not shipped
+  ☐ Users should be able to request a refund if the order has shipped
+    ☐ Users should be given a return shipping/packing label to print
+    ☐ Admins should be able to manually confirm a refund
+
+Account:
+  ✔ Users should be able to log in @done(2016-01-27 11:23) @project(Users / User Account)
+  ✔ Users should be able to log out @done(2016-01-27 11:23) @project(Users / User Account)
+  ✔ Users should be able to view their profile @done(2016-01-29 14:15) @project(Account)
+  ✔ Users should be able to change their profile @done(2016-01-29 14:15) @project(Account)
+  ✔ Users should be able to change their password @done(2016-01-29 14:15) @project(Account)
+  ✔ Users should be able to reset their password  @done(2016-02-09 13:38) @project(Account)
+    ☐ via email
+  ✔ Guests should be able to register for a new account @done(2016-01-27 11:23) @project(Guests / Guest Account)
+    ✔ Email/password registration @done(2016-01-27 11:23) @project(Guests / Guest Account)
+    ✔ Facebook registration @done(2016-02-10 22:04) @project(Account)
+    ✔ Google registration @done(2016-02-10 22:04) @project(Account)
+    ☐ Twitter registration
+    ☐ Email should be sent an activation link
+  ✔ Guests should be able to request a forgotten password @done(2016-02-03 01:09) @project(Account)
+
+Admins:
+  Admin Products:
+    ✔ Admins should be able to add new products @done(2016-01-27 11:24) @project(Admins / Admin Products)
+    ☐ Admins should be able to add pictures to a product
+    ☐ Admins should be able to add variations to a product
+    ✔ Admins should be able to edit product information @done(2016-02-09 14:42) @project(Admins / Admin Products)
+    ✔ Admins should be able to remove a product @done(2016-02-09 15:42) @project(Admins / Admin Products)
+    ✔ Admins should be able to set a product as inactive to remove from product catalogue @done(2016-02-09 14:59) @project(Admins / Admin Products)
+  Admin Dashboard:
+    ☐ Admins should be able to see site statistics
+
+Other:
+  Newsletter:
+    ☐ All visitors should be able to sign up for a newsletter
+    ☐ All visitors should be able to cancel newsletter emails (through email)
+  Security:
+    ☐ CSRF protection
+    ☐ XSS protection
+    ☐ No sensitive information available to client

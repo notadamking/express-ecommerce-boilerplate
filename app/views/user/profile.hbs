@@ -1,0 +1,11 @@
+<h1>{{title}}</h1>
+<form method="POST" action="/user/profile?_method=PUT">
+  <label for="email">Email</label>
+  <input type="email" name="email" value="{{user.email}}"/>
+  <input type="submit" value="Change Email"/>
+</form>
+<ul>
+  <li><a href="/user/change_password">Change Password</a></li>
+  <li><a href="/user/addresses">View Addresses</a></li>
+  <li><a href="/user/orders">View Orders</a></li>
+</ul>

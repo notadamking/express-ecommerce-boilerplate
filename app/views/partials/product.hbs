@@ -1,0 +1,51 @@
+<div style="display: inline-block;" {{#unless product.active}}class="ak-inactive"{{/unless}}>
+  <h2><a href="/products/{{product.SKU}}">{{product.name}}</a></h2>
+  <img src="{{product.thumbnail_image_url}}" alt="{{product.name}}" height="400px" width="400px" />
+  <div id="product-card-{{product.id}}">
+    <ul style="list-style-type: none;">
+      <li>Name: {{product.name}}</li>
+      <li>Category: <a href="/products/category/{{product.category}}">{{product.category}}</a></li>
+      <li>{{product.displayPrice}}</li>
+    </ul>
+    <p>{{product.description}}</p>
+    <form method="POST" action="/cart">
+      <input type="hidden" name="product_id" value="{{product.id}}"/>
+      <input type="hidden" name="quantity" value="1"/>
+      <input type="submit" value="Add to Cart"/>
+    </form>
+  </div>
+  <form id="edit-form-{{product.id}}" class="ak-form ak-hidden" method="POST" action="/products/{{product.SKU}}?_method=PUT">
+    <label for="name">Name: </label>
+    <input type="text" name="name" value="{{product.name}}" placeholder="Product name"/>
+    <label for="name">Category: </label>
+    <input type="text" name="category" value="{{product.category}}" placeholder="Product category"/>
+    <label for="name">Price: </label>
+    <input type="number" name="price" step=".01" min="0" value="{{product.realPrice}}" placeholder="Price"/>
+    <label for="name">Description: </label>
+    <input type="textarea" name="description" value="{{product.description}}" placeholder="Product description"/>
+    <label for="active">Active? </label>
+    <input style="float:left;" type="checkbox" name="active" {{#if product.active}}checked{{/if}}/> </br>
+    <label for="name">Add Product Image: </label>
+    <input type="file" accept="image/*" name="product_image" placeholder="Add Product Image"/>
+    <input type="submit" value="Submit Changes"/>
+  </form>
+  </br>
+  {{#if admin}}
+    <button id="edit-button-{{product.id}}" onclick="editProduct('{{product.id}}')">Edit Product</button>
+    <form method="POST" action="/products/{{product.SKU}}?_method=DELETE">
+      <input type="submit" value="Remove Product"/>
+    </form>
+  {{/if}}
+</div>
+
+<script>
+function editProduct(product_id) {
+  $('#product-card-' + product_id).toggle();
+  $('#edit-form-' + product_id).toggle();
+  if($('#edit-button-' + product_id).text() == 'Edit Product') {
+    $('#edit-button-' + product_id).text('Cancel Editing');
+  } else {
+    $('#edit-button-' + product_id).text('Edit Product');
+  }
+}
+</script>

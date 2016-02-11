@@ -1,0 +1,8 @@
+<h1>{{title}}</h1>
+{{#if cart}}
+  {{> cart_table cart=cart}}
+  <a href="/checkout/account">Checkout</a>
+  {{#unless user}}
+    <a href="/login?save_cart_id={{cart.id}}">Login and Save Cart</a>
+  {{/unless}}
+{{/if}}

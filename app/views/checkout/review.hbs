@@ -1,0 +1,45 @@
+<h1>{{title}}</h1>
+<div class="cart-container">
+  <h2>Cart</h2>
+  {{> cart_table cart=order.cart}}
+  <h3>Subtotal: {{order.displaySubtotal}}</h3>
+  {{#if coupon_code}}
+    <h3>Discount: {{order.displayDiscount}}</h3>
+  {{/if}}
+  <h3>Total: {{order.displayTotal}}</h3>
+</div>
+<div class="shipping-container">
+  <h2>Shipping</h2>
+  <h3>{{order.shipping.address.nickname}}</h3>
+  <ul id="readable-{{this.id}}" class="ak-ul">
+    <li>{{order.shipping.address.first_name}} {{order.shipping.address.last_name}}</li>
+    <li>{{order.shipping.address.street_line_1}}</li>
+    <li>{{order.shipping.address.street_line_2}}</li>
+    <li>{{order.shipping.address.city}}, {{order.shipping.address.state}} {{order.shipping.address.zip_code}}</li>
+    <li>{{order.shipping.address.country}}</li>
+  </ul>
+</div>
+<div class="billing-container">
+  <h2>Billing</h2>
+  <h3>{{order.billing.address.nickname}}</h3>
+  <ul id="readable-{{this.id}}" class="ak-ul">
+    <li>{{order.billing.address.first_name}} {{order.billing.address.last_name}}</li>
+    <li>{{order.billing.address.street_line_1}}</li>
+    <li>{{order.billing.address.street_line_2}}</li>
+    <li>{{order.billing.address.city}}, {{order.billing.address.state}} {{order.billing.address.zip_code}}</li>
+    <li>{{order.billing.address.country}}</li>
+  </ul>
+</div>
+<form method="GET" action="">
+  <input type="hidden" name="order_id" value="{{order.id}}"/>
+  <input type="hidden" name="token" value="{{token}}"/>
+  <input type="text" name="coupon_code" placeholder="Coupon" value="{{coupon_code}}"/></br>
+  <input type="submit" value="Update Total"/>
+</form>
+</br>
+<form class="ak-form" method="POST" action="">
+  <input type="hidden" name="order_id" value="{{order.id}}"/>
+  <input type="hidden" name="token" value="{{token}}"/>
+  <input type="hidden" name="coupon_code" value="{{coupon_code}}"/></br>
+  <input type="submit" value="Confirm order and make payment"/>
+</form>

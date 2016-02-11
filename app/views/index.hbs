@@ -1,0 +1,19 @@
+<h1>{{title}}</h1>
+  {{#if user}}
+    <p>Welcome {{user.email}}!</p>
+  {{else}}
+    <p>No user logged in.</p>
+  {{/if}}
+  <div>
+    <table class="ak-table">
+      <tr><th>Email</th><th>Date Created:</th><th>Admin</th><th>Cart</th></tr>
+    {{#each users}}
+      <tr>
+        <td>{{this.email}}</td>
+        <td>{{this.date_created}}</td>
+        <td>{{this.admin}}</td>
+        <td>{{this.cart}}</td>
+      </tr>
+    {{/each}}
+    </table>
+  </div>
