@@ -1,0 +1,24 @@
+<h1>{{title}}</h1>
+<form method="GET" action="/products/search">
+  <input type="search" name="q" placeholder="Search products..."/>
+</form>
+{{#if user.admin}}
+  <button onclick="$('.add-product-form').toggle();">Toggle New Product Form</button>
+  <form class="add-product-form ak-hidden" method="POST" action="" enctype="multipart/form-data">
+    <input type="text" name="name" placeholder="Product name"/>
+    <input type="textarea" name="description" placeholder="Product description"/>
+    <input type="text" name="category" placeholder="Product category"/>
+    <input type="number" step=".01" min="0" name="price" placeholder="Price"/>
+    <label for="image">Product image</label>
+    <input type="file" accept="image/*" name="image"/>
+    <label for="active">Active? </label>
+    <input style="float:left;" type="checkbox" name="active" checked/>
+    <input type="submit" value="Add Product"/>
+  </form>
+{{/if}}
+</br>
+{{#each products}}
+  {{#ifCond this.active '||' ../user.admin}}
+    {{> product product=this admin=../../user.admin}}
+  {{/ifCond}}
+{{/each}}

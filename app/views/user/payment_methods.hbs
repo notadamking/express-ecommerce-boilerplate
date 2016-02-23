@@ -1,0 +1,47 @@
+<h1>{{title}}</h1>
+<h3>Default Payment Method: {{default_payment}}</h3>
+
+{{#each payment_methods}}
+  <div class="ak-border">
+    <h4>{{this.id}}</h4>
+    {{#if this.cardType}}
+      <ul class="ak-ul">
+        <li>{{this.cardType}} : {{this.maskedNumber}}</li>
+        <li>Expiration : {{this.expirationDate}}</li>
+        <li>Token : {{this.token}}</li>
+      </ul>
+    {{else}}
+      <ul class="ak-ul">
+        <li>PayPal : {{this.email}}</li>
+        <li>Token : {{this.token}}</li>
+      </ul>
+    {{/if}}
+    {{#unless this.default}}
+      <form method="POST" action="/user/payment_methods/default">
+        <input type="hidden" name="token" value="{{this.token}}"/>
+        <input type="submit" value="Make Default Payment Method">
+      </form>
+    {{/unless}}
+    <form method="POST" action="/user/payment_methods/{{this.token}}?_method=DELETE">
+      <input type="submit" value="Remove Payment Method"/>
+    </form>
+  </div>
+{{else}}
+  <p>You have no saved payment methods.</p>
+{{/each}}
+<button onclick="$('#new-payment-method-form').show();">Add New Payment Method</button>
+<form class="ak-hidden" id="new-payment-method-form" method="POST" action="">
+  <div id="payment-form"></div>
+  <input class="ak-hidden" type="checkbox" id="make-default-payment" name="make-default-payment"/>
+  <label class="ak-hidden" for="make-default-payment">Set as default payment method?</label></br>
+  <input type="submit" value="Add New Payment Method"/>
+</form>
+
+<script src="https://js.braintreegateway.com/v2/braintree.js"></script>
+<script>
+  var clientToken = '{{client_token}}';
+
+  braintree.setup(clientToken, "dropin", {
+    container: "payment-form"
+  });
+</script>
