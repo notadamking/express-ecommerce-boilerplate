@@ -7,12 +7,13 @@ Products:
   ✔ All visitors should be able to add a product to their cart @done(2016-01-28 17:28) @project(Products)
     ☐ Adding a product to cart should open a mini cart
       ☐ Mini cart should indicate which item was just added to cart
-      ☐ Mini cart should have upsell items
       ☐ Mini cart should have checkout button that stands out
       ☐ Mini cart should be able to show all items in cart
-  ☐ All visitors should be able to easily see product images
-  ☐ All visitors should be able to view different variations of a product
-  ☐ All visitors should be able to see similar products
+  ✔ All visitors should be able to easily see product images @done(2016-02-11 17:43) @project(Products)
+  ✔ All visitors should be able to view different variations of a product @done(2016-02-14 17:24) @project(Products)
+    ✔ Selecting a different variation should change product attributes and images @done(2016-02-18 15:32) @project(Products)
+  ☐ All visitors should be shown upsell items on product page and carts
+
 
 Cart:
   ✔ Users/Guests should be able to view their cart @done(2016-01-27 11:23) @project(Users / User Carts)
@@ -31,7 +32,7 @@ Checkout:
   ✔ All visitors should be able to add a payment method @done(2016-02-03 01:09) @project(Checkout)
     ✔ PayPal @done(2016-02-03 14:37) @project(Checkout)
     ✔ Credit Card @done(2016-02-03 01:09) @project(Checkout)
-  ☐ Users should be able to save / use a saved a payment method
+  ✔ Users should be able to save / use a saved a payment method @done(2016-02-14 00:19) @project(Checkout)
   ✔ Users should be given / checked for a checkout token @done(2016-02-11 10:47) @project(Checkout)
     ✔ Users should be have to log back in if checkout expiration time has passed @done(2016-02-11 10:47) @project(Checkout)
 
@@ -39,11 +40,11 @@ Checkout:
 Orders:
   ✔ Users should be able to view their orders @done(2016-02-03 01:09) @project(Orders)
   ✔ Guests should be able to view their orders by order id @done(2016-02-03 14:37) @project(Orders)
-  ☐ Users should be able to change a shipping address if the order has not shipped
-  ☐ Users should be able to cancel an order if it has not shipped
-  ☐ Users should be able to request a refund if the order has shipped
+  ✔ Users should be able to change a shipping address if the order has not shipped @done(2016-02-19 14:34) @project(Orders)
+  ✔ Users should be able to cancel an order if it has not shipped @done(2016-02-19 13:58) @project(Orders)
+  ✔ Users should be able to request a refund if the order has shipped @done(2016-02-19 13:58) @project(Orders)
     ☐ Users should be given a return shipping/packing label to print
-    ☐ Admins should be able to manually confirm a refund
+
 
 Account:
   ✔ Users should be able to log in @done(2016-01-27 11:23) @project(Users / User Account)
@@ -52,31 +53,50 @@ Account:
   ✔ Users should be able to change their profile @done(2016-01-29 14:15) @project(Account)
   ✔ Users should be able to change their password @done(2016-01-29 14:15) @project(Account)
   ✔ Users should be able to reset their password  @done(2016-02-09 13:38) @project(Account)
-    ☐ via email
+    ✔ via email @done(2016-02-12 11:49) @project(Account)
   ✔ Guests should be able to register for a new account @done(2016-01-27 11:23) @project(Guests / Guest Account)
     ✔ Email/password registration @done(2016-01-27 11:23) @project(Guests / Guest Account)
     ✔ Facebook registration @done(2016-02-10 22:04) @project(Account)
     ✔ Google registration @done(2016-02-10 22:04) @project(Account)
-    ☐ Twitter registration
-    ☐ Email should be sent an activation link
+    ✔ Twitter registration @done(2016-02-12 13:11) @project(Account)
+    ✔ Email should be sent an activation link @done(2016-02-12 12:02) @project(Account)
+    ✔ All login methods should be linked to one user account by email @done(2016-02-12 13:16) @project(Account)
   ✔ Guests should be able to request a forgotten password @done(2016-02-03 01:09) @project(Account)
+
 
 Admins:
   Admin Products:
     ✔ Admins should be able to add new products @done(2016-01-27 11:24) @project(Admins / Admin Products)
-    ☐ Admins should be able to add pictures to a product
-    ☐ Admins should be able to add variations to a product
+    ✔ Admins should be able to add pictures to a product @done(2016-02-11 17:42) @project(Admins / Admin Products)
+    ✔ Admins should be able to remove pictures from a product  @done(2016-02-11 17:42) @project(Admins / Admin Products)
+    ✔ Admins should be able to add variations to a product @done(2016-02-14 17:25) @project(Admins / Admin Products)
+    ✔ Admins should be able to remove variations from a product @done(2016-02-14 17:25) @project(Admins / Admin Products)
+    ☐ Admins should be able to edit variations of a product
     ✔ Admins should be able to edit product information @done(2016-02-09 14:42) @project(Admins / Admin Products)
     ✔ Admins should be able to remove a product @done(2016-02-09 15:42) @project(Admins / Admin Products)
     ✔ Admins should be able to set a product as inactive to remove from product catalogue @done(2016-02-09 14:59) @project(Admins / Admin Products)
+
+  Admin Orders:
+    ☐ Admins should be able to manually confirm a refund for an order
+
+  Admin Email:
+    ☐ Admins should be able to send newsletter emails
+
   Admin Dashboard:
     ☐ Admins should be able to see site statistics
+    ☐ Admins should be able to see store statistics
 
 Other:
+  Code:
+    ☐ Refactor checkout.js (especially billing) (coroutines?)
+    ☐ Restructure imports more efficiently
+
   Newsletter:
     ☐ All visitors should be able to sign up for a newsletter
     ☐ All visitors should be able to cancel newsletter emails (through email)
+
   Security:
     ☐ CSRF protection
     ☐ XSS protection
     ☐ No sensitive information available to client
+    ☐ All routes protected

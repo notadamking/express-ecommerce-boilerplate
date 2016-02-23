@@ -1,30 +1,32 @@
 <h1>{{title}}</h1>
-<h2>Enter your payment information</h2>
+<h2>Select your method of payment</h2>
 <form id="checkout" method="POST" action="">
   <input type="hidden" name="order_id" value="{{order.id}}"/>
   <div id="payment-form"></div>
-  <input type="checkbox" id="use-shipping-address" name="use_shipping_address" checked>
+  <input type="checkbox" id="make-default-payment" name="make_default_payment"/>
+  <label for="make-default-payment">Set as default payment method?</label></br>
+  <input type="checkbox" id="use-shipping-address" name="use_shipping_address" checked/>
   <label for="use-shipping-address">Billing address same as shipping?</label> </br>
   <input type="hidden" name="shipping_address_id" value="{{order.shipping.address.id}}"/>
 
   <div id="billing-address-form" class="ak-hidden ak-form">
     <h2>Choose your billing address</h2>
-    {{#each addresses}}
+    {{#each user.addresses}}
       <input type="radio" name="address_id" value="{{this.id}}"
-        {{#unless default_address_id}}
+        {{#unless ../user.default_address_id}}
           {{#if @first}}checked{{/if}}
         {{/unless}}
-        {{#ifCond default_address_id '==' this.id}}checked{{/ifCond}}
+        {{#ifCond ../user.default_address_id '==' this.id}}checked{{/ifCond}}
       />
       <label for="address_id">{{this.displayAddress}}</label>
       <button>Edit</button>
     {{/each}}
-    {{#if addresses}}
+    {{#if user.addresses}}
     <h3>- OR -</h3>
     {{/if}}
-    <input type="radio" id="new_address_radio" name="address_id" value="new" {{#unless addresses}}checked{{/unless}}/>
+    <input type="radio" id="new_address_radio" name="address_id" value="new" {{#unless user.addresses}}checked{{/unless}}/>
     <label for="address_id">Bill to a new address</label>
-    <div id="new_address_form" class="{{#if addresses}}ak-hidden{{/if}} ak-form">
+    <div id="new_address_form" class="{{#if user.addresses}}ak-hidden{{/if}} ak-form">
       <input type="text" name="nickname" placeholder="Nickname for Address"/>
       <input type="text" name="first_name" placeholder="First Name"/>
       <input type="text" name="last_name" placeholder="Last Name"/>
@@ -39,6 +41,7 @@
   <input type="submit" value="Continue to Review Order"/>
 </form>
 
+<script src="https://js.braintreegateway.com/v2/braintree.js"></script>
 <script>
   var clientToken = '{{client_token}}';
 
@@ -60,6 +63,6 @@
       } else {
         $('#new_address_form').hide();
       }
-    })
+    });
   });
 </script>

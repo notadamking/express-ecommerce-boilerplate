@@ -1,9 +1,17 @@
 var mongoose = require('mongoose'),
-    uuid = require('node-uuid'),
-    passportLocalMongoose = require('passport-local-mongoose');
-    Cart = mongoose.model('Cart'),
-    Order = mongoose.model('Order'),
-    Address = mongoose.model('Address');
+  uuid = require('node-uuid'),
+  sendgrid = require('sendgrid')('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'),
+  passportLocalMongoose = require('passport-local-mongoose');
+Cart = mongoose.model('Cart'),
+  Order = mongoose.model('Order'),
+  Address = mongoose.model('Address'),
+  braintree = require('braintree'),
+  gateway = braintree.connect({
+    environment: braintree.Environment.Sandbox,
+    merchantId: '37rkyn2n5tszjskc', //sandbox
+    publicKey: 'kqdb8hgwrh6xt582', //sandbox
+    privateKey: '1bd6b731bf7a3d8d79dfd97455c8aa95' //sandbox
+  });
 
 var User = new mongoose.Schema({
   email: {
@@ -17,11 +25,15 @@ var User = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  confirm_email_token: {
+    type: String,
+    default: uuid.v4
+  },
   default_address: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Address'
   },
-  braintree_customer_id: Number,
+  braintree_customer_id: String,
   password_reset_token: String,
   password_reset_expiration: Date,
   checkout_token: String,
@@ -75,13 +87,15 @@ var User = new mongoose.Schema({
 });
 
 User.post('init', function(user) {
-  if(!user.cart) {
-    var cart = new Cart({user: user});
+  if (!user.cart) {
+    var cart = new Cart({
+      user: user
+    });
     cart.save(function(err) {
-      if(err) console.log("Error saving new cart.");
+      if (err) console.log("Error saving new cart.");
       else user.cart = cart.id;
       user.save(function(err) {
-        if(err) console.log("Error saving new cart to user");
+        if (err) console.log("Error saving new cart to user");
       });
     });
   }
@@ -92,6 +106,30 @@ User.pre('update', function(next) {
   next();
 });
 
+User.methods.validateCheckoutToken = function(token) {
+  var now = new Date();
+  return this.checkout_token == token && now < this.checkout_expiration;
+}
+
+User.methods.setupCustomer = function(customer, done) {
+  this.braintree_customer_id = customer.id;
+  this.save(function(err) {
+    if (err)
+      console.log("Error saving BT customer id to user. ", err);
+    gateway.paymentMethod.update(
+      customer.paymentMethods[0].token, {
+        options: {
+          makeDefault: true
+        }
+      },
+      function(err, result) {
+        if (err)
+          console.log("Error setting new payment method to default");
+        done(err);
+      });
+  });
+}
+
 User.methods.getCheckoutToken = function(done) {
   var token = uuid.v4();
   this.checkout_token = token;
@@ -99,7 +137,7 @@ User.methods.getCheckoutToken = function(done) {
   expires.setMinutes(expires.getMinutes() + 30);
   this.checkout_expiration = expires;
   this.save(function(err) {
-    if(err) console.log("Error reseting checkout expiration ", err);
+    if (err) console.log("Error reseting checkout expiration ", err);
     done(err, token);
   });
 }
@@ -107,40 +145,178 @@ User.methods.getCheckoutToken = function(done) {
 User.methods.addOrder = function(order, done) {
   this.orders.push(order);
   this.save(function(err) {
-    if(err) console.log("Error saving user after adding new order: ", err);
+    if (err) console.log("Error saving user after adding new order: ", err);
     done(err);
   });
 }
 
 User.methods.updateOrder = function(order, done) {
-  Order.update({ _id: order.id }, order, function(err, order) {
-    if(err) console.log("Error updating user order: ", err);
+  Order.update({
+    _id: order.id
+  }, order, function(err, order) {
+    if (err) console.log("Error updating user order: ", err);
     done(err);
   });
 }
 
 User.methods.removeOrder = function(order_id, done) {
-  this.update({ $pull: { 'orders': { _id: order_id } } }, function(err) {
-    if(err) console.log("Error removing order for user: ", err);
+  this.update({
+    $pull: {
+      'orders': {
+        _id: order_id
+      }
+    }
+  }, function(err) {
+    if (err) console.log("Error removing order for user: ", err);
     done(err);
   });
 }
 
-User.methods.addAddress = function(address, default_address, done) {
+User.methods.cancelOrder = function(order_id, done) {
+  var self = this;
+  Order.findById(order_id, function(err, order) {
+    if (err) console.log("Error finding order by id: ", err);
+    if (!order) {
+      done(err, {
+        type: 'error',
+        message: 'No order exists with that id.'
+      });
+    } else if (order.status != 'paid') {
+      done(err, {
+        type: 'error',
+        message: 'You cannot cancel an order with status ' + order.status
+      });
+    } else {
+      gateway.transaction.find(order.billing.transaction_id, function(err, transaction) {
+        if (err) console.log("Error refunding order: ", err);
+        if (!transaction) {
+          done(err, {
+            type: 'error',
+            message: 'Error processing refund.'
+          });
+        } else {
+          if (transaction.status == 'settled' || transaction.status == 'settling') {
+            gateway.transaction.refund(order.billing.transaction_id, function(err, result) {
+              if (err) console.log("Error refunding order: ", err);
+              if (result && result.success) {
+                order.status = 'cancelled';
+                order.save(function(err) {
+                  if (err) console.log('Error saving order after refund: ', err);
+                  sendgrid.send({
+                    to: self.email,
+                    from: 'support@localhost',
+                    subject: 'Order Cancellation',
+                    html: '<body><p>Your order has been cancelled and your money refunded.</p></body>'
+                  }, function(err) {
+                    if (err) console.log('Error sending email for order cancellation: ', err);
+                    done(err, {
+                      type: 'success',
+                      message: 'Successfully cancelled and refunded order. You should receive an email shortly.'
+                    });
+                  });
+                });
+              } else {
+                console.log("Error refunding order: ", result);
+                done(err, {
+                  type: 'error',
+                  message: 'Error processing refund.'
+                });
+              }
+            });
+          } else {
+            gateway.transaction.void(order.billing.transaction_id, function(err, result) {
+              if (err) console.log("Error refunding order: ", err);
+              if (result && result.success) {
+                order.status = 'cancelled';
+                order.save(function(err) {
+                  if (err) console.log('Error saving order after refund: ', err);
+                  sendgrid.send({
+                    to: self.email,
+                    from: 'support@localhost',
+                    subject: 'Order Cancellation',
+                    html: '<body><p>Your order has been cancelled and your money refunded.</p></body>'
+                  }, function(err) {
+                    if (err) console.log('Error sending email for order cancellation: ', err);
+                    done(err, {
+                      type: 'success',
+                      message: 'Successfully cancelled and refunded order. You should receive an email shortly.'
+                    });
+                  });
+                });
+              } else {
+                console.log("Error refunding order: ", result);
+                done(err, {
+                  type: 'error',
+                  message: 'Error processing refund.'
+                });
+              }
+            });
+          }
+        }
+      });
+    }
+  })
+}
+
+User.methods.requestOrderReturn = function(order_id, done) {
+  var self = this;
+  Order.findById(order_id, function(err, order) {
+    if (err) console.log("Error finding order by id: ", err);
+    if (!order) {
+      done(err, {
+        type: 'error',
+        message: 'No order exists with that id.'
+      });
+    } else if (order.status != 'shipped' && order.status != 'delivered') {
+      done(err, {
+        type: 'error',
+        message: 'You cannot request a refund for an order with status ' + order.status
+      });
+    } else {
+      order.status = 'expecting_return';
+      sendgrid.send({
+        to: self.email,
+        from: 'support@localhost',
+        subject: 'Order Return',
+        html: '<body><p>Return the items with the return label and packing slip provided.</p></body>'
+      }, function(err) {
+        if (err) {
+          console.log('Error sending email for order return request');
+          done(err, {
+            type: 'error',
+            message: 'Could not request a return at this time. Try again later.'
+          });
+        } else {
+          order.save(function(err) {
+            if (err) console.log('Error saving order after requesting return: ', err);
+            done(err, {
+              type: 'success',
+              message: 'Successfully requested a return. You should receive an email shortly.'
+            });
+          });
+        }
+      });
+    }
+  });
+}
+
+User.methods.addAddress = function(address, make_default, done) {
   this.addresses.push(address);
 
-  if(default_address)
+  if (make_default)
     this.default_address = address.id;
 
   this.save(function(err) {
-    if(err) console.log("Error saving user after adding new address: ", err);
+    if (err) console.log("Error saving user after adding new address: ", err);
     done(err);
   });
 }
 
-User.methods.updateAddress = function(address, default_address, done) {
-  var arr = this.addresses.filter(function(v) { return v['_id'] == address.id });
-  if(arr.length < 1) {
+User.methods.updateAddress = function(address, make_default, done) {
+  var arr = this.addresses.filter(function(v) {
+    return v['_id'] == address.id
+  });
+  if (arr.length < 1) {
     console.log("Tried to update non-existant address.");
     done();
   } else {
@@ -154,31 +330,58 @@ User.methods.updateAddress = function(address, default_address, done) {
     arr[0].state = address.state;
     arr[0].country = address.country;
 
-    if(default_address) {
+    if (make_default) {
       this.default_address = address.id;
       this.save(function(err) {
-        if(err) console.log("Error updating default address for user.");
+        if (err) console.log("Error updating default address for user.");
       });
     }
 
     arr[0].save(function(err) {
-      if(err) console.log("Error saving address after update.");
+      if (err) console.log("Error saving address after update.");
       done(err);
     });
   }
 }
 
-User.methods.removeAddress = function(address_id, done) {
-  if(this.default_address == address_id) {
-    this.default_address = undefined;
-    this.save(function(err) {
-      if(err) console.log("Error saving user after removing address: ", err);
-    });
-  }
-  this.update({ $pull: { addresses: address_id } }, function(err) {
-    if(err) console.log("Error removing address for user: ", err);
+User.methods.setDefaultAddress = function(address_id, done) {
+  this.default_address = address_id;
+  this.save(function(err) {
+    if (err) console.log("Error changing default address: ", err);
     done(err);
   });
+}
+
+User.methods.removeAddress = function(address_id, done) {
+  if (this.default_address == address_id) {
+    this.default_address = undefined;
+    this.save(function(err) {
+      if (err) console.log("Error saving user after removing address: ", err);
+    });
+  }
+  this.update({
+    $pull: {
+      addresses: address_id
+    }
+  }, function(err) {
+    if (err) console.log("Error removing address for user: ", err);
+    done(err);
+  });
+}
+
+User.methods.removePaymentMethod = function(token, done) {
+  gateway.paymentMethod.delete(token, function(err) {
+    if (err) console.log("Error removing payment method for user: ", err);
+    done(err);
+  });
+}
+
+User.methods.displayPaymentMethod = function(payment_method) {
+  if (payment_method.cardType) {
+    return this.cardType + ' : ' + this.maskedNumber;
+  } else {
+    return 'PayPal : ' + this.email;
+  }
 }
 
 User.methods.isAdmin = function() {

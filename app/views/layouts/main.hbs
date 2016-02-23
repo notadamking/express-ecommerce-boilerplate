@@ -9,7 +9,6 @@
     <script src="http://localhost:35729/livereload.js"></script>
   {{/if}}
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-  <script src="https://js.braintreegateway.com/v2/braintree.js"></script>
 </head>
 <body>
   <ul class="nav">
@@ -28,6 +27,9 @@
         <li><input type="submit" value="Find Order"/></li>
     </form>
   </ul>
+  {{#each messages.success}}
+    <p>{{this}}</p>
+  {{/each}}
   {{#each messages.info}}
     <p>{{this}}</p>
   {{/each}}

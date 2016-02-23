@@ -2,20 +2,22 @@
   <tr><th></th><th>ID</th><th>SKU</th><th>Name</th><th>Category</th><th>Price</th><th>Quantity</th>{{#unless complete}}<th></th><th></th>{{/unless}}</tr>
 {{#each cart.items}}
   <tr>
-    <td><img src="{{this.product.thumbnail_image_url}}" width="64px" height="64px"/></td>
+    <td><img src="{{variant.thumbnail_image_url}}" width="64px" height="64px"/></td>
     <td>{{this.product.id}}</td>
-    <td>{{this.product.SKU}}</td>
-    <td>{{this.product.name}}</td>
+    <td>{{this.variant.SKU}}</td>
+    <td>{{this.product.name}} ({{this.variant.title}})</td>
     <td>{{this.product.category}}</td>
-    <td>{{this.product.displayPrice}}</td>
+    <td>{{fmt_price this.variant.price}}</td>
     {{#if ../complete}}
       <td>{{this.quantity}}</td>
     {{else}}
       <form method="POST" action="/cart/{{this.product.id}}?_method=PUT">
+        <input type="hidden" name="variant_SKU" value="{{this.variant.SKU}}"/>
         <td><input type="number" name="quantity" value="{{this.quantity}}" min="1"/></td>
         <td><input type="submit" value="Update Quantity"/></td>
       </form>
       <form method="POST" action="/cart/{{this.product.id}}?_method=DELETE">
+        <input type="hidden" name="variant_SKU" value="{{this.variant.SKU}}"/>
         <td><input type="submit" value="Remove Item"/></td>
       </form>
     {{/if}}

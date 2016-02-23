@@ -1,5 +1,6 @@
 var router = require('express').Router(),
   passport = require('passport'),
+  sendgrid = require('sendgrid')('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'),
   mongoose = require('mongoose'),
   User = mongoose.model('User');
 
@@ -36,6 +37,15 @@ router.post('/register', function(req, res, next) {
       req.flash('error', 'An account has already been registered with that email address.');
       return res.redirect('/register');
     }
+    var confirm_email_link = 'http://localhost:3000/user/confirm_email?token=' + user.confirm_email_token;
+    sendgrid.send({
+      to: user.email,
+      from: 'support@localhost',
+      subject: 'Confirm Email Address',
+      html: '<body><a href="' + confirm_email_link + '">Confirm Email Address</a></body>'
+    }, function(err) {
+      if(err) console.log("Error sending account activation email. ", err);
+    });
     // log the user in after successful registration
     passport.authenticate('local')(req, res, function() {
       req.user.getCheckoutToken(function(err, token) {
@@ -66,7 +76,7 @@ router.post('/login', passport.authenticate('local', {
     if(err) return next(err);
     if(token) req.session.checkout_token = token;
   });
-  if(req.query.save_cart_id) {
+  if(req.query.save_cart_id && req.query.save_cart_id != '') {
     req.user.cart.addGuestCart(req.query.save_cart_id, function(err) {
       if(err) return next(err);
       req.session.cart_id = undefined;

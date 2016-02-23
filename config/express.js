@@ -9,6 +9,7 @@ var express = require('express'),
     methodOverride = require('method-override'),
     passport = require('passport'),
     helmet = require('helmet'),
+    moment = require('moment'),
     session = require('express-session'),
     exphbs = require('express-handlebars'),
     MongoStore = require('connect-mongo')(session),
@@ -21,45 +22,59 @@ module.exports = function(app, config) {
   app.locals.ENV = env;
   app.locals.ENV_DEVELOPMENT = env == 'development';
 
-  // view engine setup
-  app.engine('.hbs',   exphbs({
-      extname: '.hbs',
-      layoutsDir: config.root + '/app/views/layouts/',
-      defaultLayout: 'main',
-      partialsDir: [config.root + '/app/views/partials/'],
-      helpers: {
-        exists: function(variable, options) {
-          if (typeof variable != 'undefined' && variable != 'undefined') {
-              return options.fn(this);
-          } else {
-              return options.inverse(this);
-          }
-        },
-        ifCond: function (v1, operator, v2, options) {
-          switch (operator) {
-              case '==':
-                  return (v1 == v2) ? options.fn(this) : options.inverse(this);
-              case '===':
-                  return (v1 === v2) ? options.fn(this) : options.inverse(this);
-              case '<':
-                  return (v1 < v2) ? options.fn(this) : options.inverse(this);
-              case '<=':
-                  return (v1 <= v2) ? options.fn(this) : options.inverse(this);
-              case '>':
-                  return (v1 > v2) ? options.fn(this) : options.inverse(this);
-              case '>=':
-                  return (v1 >= v2) ? options.fn(this) : options.inverse(this);
-              case '&&':
-                  return (v1 && v2) ? options.fn(this) : options.inverse(this);
-              case '||':
-                  return (v1 || v2) ? options.fn(this) : options.inverse(this);
-              default:
-                  return options.inverse(this);
-            }
+  var hbs = exphbs.create({
+    extname: '.hbs',
+    layoutsDir: config.root + '/app/views/layouts/',
+    defaultLayout: 'main',
+    partialsDir: [config.root + '/app/views/partials/'],
+    helpers: {
+      exists: function(variable, options) {
+        if (typeof variable != 'undefined' && variable != 'undefined') {
+            return options.fn(this);
+        } else {
+            return options.inverse(this);
         }
+      },
+      ifCond: function (v1, operator, v2, options) {
+        switch (operator) {
+            case '!=':
+              return (v1 != v2) ? options.fn(this) : options.inverse(this);
+            case '!==':
+              return (v1 !== v2) ? options.fn(this) : options.inverse(this);
+            case '==':
+                return (v1 == v2) ? options.fn(this) : options.inverse(this);
+            case '===':
+                return (v1 === v2) ? options.fn(this) : options.inverse(this);
+            case '<':
+                return (v1 < v2) ? options.fn(this) : options.inverse(this);
+            case '<=':
+                return (v1 <= v2) ? options.fn(this) : options.inverse(this);
+            case '>':
+                return (v1 > v2) ? options.fn(this) : options.inverse(this);
+            case '>=':
+                return (v1 >= v2) ? options.fn(this) : options.inverse(this);
+            case '&&':
+                return (v1 && v2) ? options.fn(this) : options.inverse(this);
+            case '||':
+                return (v1 || v2) ? options.fn(this) : options.inverse(this);
+            default:
+                return options.inverse(this);
+          }
+      },
+      encode: function(string) {
+        return encodeURIComponent(string);
+      },
+      fmt_price: function(price) {
+        return '$' + (price / 100).toFixed(2);
+      },
+      fmt_date: function(date) {
+        return moment(date).format('MM-DD-YYYY');
       }
-    })
-  );
+    }
+  });
+
+  // view engine setup
+  app.engine('.hbs', hbs.engine);
   app.set('views', path.join(config.root + '/app/views'));
   app.set('view engine', '.hbs');
 

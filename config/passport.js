@@ -21,7 +21,12 @@ module.exports = function(app, passport) {
     callbackURL: oauth.facebook.callbackURL,
     profileFields: [ 'email' ]
   }, function handle_token(accessToken, refreshToken, profile, done) {
-    User.findOne({ 'facebook.oauth_id': profile.id }, function(err, user) {
+    User.findOneAndUpdate({ email: profile.emails[0].value }, {
+      facebook: {
+        oauth_id: profile.id,
+        token: accessToken
+      }
+    }, function(err, user) {
       if(err) console.log(err);
       if(!user) {
         user = new User({
@@ -46,10 +51,14 @@ module.exports = function(app, passport) {
     consumerKey: oauth.twitter.consumerKey,
     consumerSecret: oauth.twitter.consumerSecret,
     callbackURL: oauth.twitter.callbackURL,
-    scope: [ 'email' ]
+    includeEmail: true,
   }, function (accessToken, refreshToken, profile, done) {
-    User.findOne({ 'twitter.oauth_id': profile.id }, function(err, user) {
-      console.log("PROFILE: ", profile);
+    User.findOneAndUpdate({ email: profile.emails[0].value }, {
+      twitter: {
+        oauth_id: profile.id,
+        token: accessToken
+      }
+    }, function(err, user) {
       if(err) console.log(err);
       if(!user) {
         user = new User({
@@ -75,7 +84,12 @@ module.exports = function(app, passport) {
     callbackURL: oauth.google.callbackURL,
     scope: [ 'email' ]
   }, function (accessToken, refreshToken, profile, done) {
-    User.findOne({ 'google.oauth_id': profile.id }, function(err, user) {
+    User.findOneAndUpdate({ email: profile.emails[0].value }, {
+      google: {
+        oauth_id: profile.id,
+        token: accessToken
+      }
+    }, function(err, user) {
       if(err) console.log(err);
       if(!user) {
         user = new User({

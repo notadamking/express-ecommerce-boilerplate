@@ -1,51 +1,135 @@
-<div style="display: inline-block;" {{#unless product.active}}class="ak-inactive"{{/unless}}>
-  <h2><a href="/products/{{product.SKU}}">{{product.name}}</a></h2>
-  <img src="{{product.thumbnail_image_url}}" alt="{{product.name}}" height="400px" width="400px" />
-  <div id="product-card-{{product.id}}">
-    <ul style="list-style-type: none;">
-      <li>Name: {{product.name}}</li>
-      <li>Category: <a href="/products/category/{{product.category}}">{{product.category}}</a></li>
-      <li>{{product.displayPrice}}</li>
-    </ul>
-    <p>{{product.description}}</p>
-    <form method="POST" action="/cart">
-      <input type="hidden" name="product_id" value="{{product.id}}"/>
-      <input type="hidden" name="quantity" value="1"/>
-      <input type="submit" value="Add to Cart"/>
-    </form>
-  </div>
-  <form id="edit-form-{{product.id}}" class="ak-form ak-hidden" method="POST" action="/products/{{product.SKU}}?_method=PUT">
-    <label for="name">Name: </label>
-    <input type="text" name="name" value="{{product.name}}" placeholder="Product name"/>
-    <label for="name">Category: </label>
-    <input type="text" name="category" value="{{product.category}}" placeholder="Product category"/>
-    <label for="name">Price: </label>
-    <input type="number" name="price" step=".01" min="0" value="{{product.realPrice}}" placeholder="Price"/>
-    <label for="name">Description: </label>
-    <input type="textarea" name="description" value="{{product.description}}" placeholder="Product description"/>
-    <label for="active">Active? </label>
-    <input style="float:left;" type="checkbox" name="active" {{#if product.active}}checked{{/if}}/> </br>
-    <label for="name">Add Product Image: </label>
-    <input type="file" accept="image/*" name="product_image" placeholder="Add Product Image"/>
-    <input type="submit" value="Submit Changes"/>
-  </form>
-  </br>
+<div class="product-container {{#unless product.active}}ak-inactive{{/unless}}">
+  <h2 class="product-title"><a href="/products/{{product.id}}">{{product.name}}</a></h2>
   {{#if admin}}
-    <button id="edit-button-{{product.id}}" onclick="editProduct('{{product.id}}')">Edit Product</button>
-    <form method="POST" action="/products/{{product.SKU}}?_method=DELETE">
-      <input type="submit" value="Remove Product"/>
-    </form>
+    <div class="ak-center admin-product-controls">
+      <button id="edit-btn-{{product.id}}" onclick="toggleEditProduct('{{product.id}}')">Edit Product</button>
+      <form class="ak-inline" method="POST" action="/products/{{product.id}}?_method=DELETE">
+        <input type="submit" value="Remove Product"/>
+      </form>
+      </br>
+      <button id="add-variant-btn-{{product.id}}" onclick="toggleAddVariant('{{product.id}}');">Add Variant</button>
+      <button id="add-product-image-btn-{{product.id}}" onclick="toggleAddImage('{{product.id}}');">Add Product Image</button>
+      <form id="add-variant-form-{{product.id}}" class="ak-form ak-hidden" enctype="multipart/form-data" method="POST" action="/products/{{product.id}}/variants">
+        <input type="text" name="title" placeholder="Variant title"/>
+        <input type="text" name="SKU" placeholder="Variant SKU (optional)"/>
+        <input type="text" name="description" placeholder="Description (optional)"/>
+        <input type="text" name="attributes" placeholder="Attributes (optional)"/>
+        <input type="number" step=".01" min="0" name="price" value="{{product.realPrice}}"/>
+        <label for="image">Product image</label>
+        <input type="file" accept="image/*" name="image"/>
+        <label for="active">Active? </label>
+        <input type="checkbox" name="active" checked/>
+        <input type="submit" value="Add Variant"/>
+      </form>
+      <form id="add-product-image-form-{{product.id}}" class="ak-form ak-hidden" enctype="multipart/form-data" method="POST" action="/products/{{product.id}}/images"/>
+        <input id="{{product.id}}-new-image-variant-id" type="hidden" name="variant_SKU" value="{{product.variants.0.SKU}}"/>
+        <label for="image">Upload product image</label>
+        <input type="file" accept="image/*" name="image"/>
+        <label for="thumbnail">Thumbnail?</label>
+        <input type="checkbox" name="thumbnail"/>
+        <input type="submit" value="Upload image"/>
+      </form>
+      <form id="edit-form-{{product.id}}" class="ak-hidden" method="POST" action="/products/{{product.id}}?_method=PUT">
+        <label for="name">Name: </label>
+        <input type="text" name="name" value="{{product.name}}" placeholder="Product name"/></br>
+        <label for="name">Category: </label>
+        <input type="text" name="category" value="{{product.category}}" placeholder="Product category"/></br>
+        <label for="active">Active? </label>
+        <input style="float:left;" type="checkbox" name="active" {{#if product.active}}checked{{/if}}/></br>
+        <input type="submit" value="Submit Changes"/>
+      </form>
+    </div>
   {{/if}}
+  {{#each product.variants}}
+    <div id="product-{{../product.id}}-images-container-{{this.SKU}}" class="product-images-container {{#unless @first}}ak-hidden{{/unless}}">
+      <div id="thumbnail-images-container" class="thumbnail-images-container">
+        {{#each this.image_urls}}
+          <img src="{{this}}" alt="{{../../product.name}}" onclick="changeProductImage('{{../this.SKU}}', '{{this}}');"/>
+          {{#if ../../admin}}
+            <form method="POST" action="/products/{{../../../product.id}}/images/{{encode this}}?_method=DELETE"/>
+              <input type="hidden" name="variant_SKU" value="{{../../this.SKU}}"/>
+              <input class="remove-image-btn" type="submit" value="x"/>
+            </form>
+          {{/if}}
+        {{/each}}
+      </div>
+      <div class="large-image-container">
+        <img id="large-image-{{this.SKU}}" src="{{this.thumbnail_image_url}}" alt="{{this.title}}"/>
+      </div>
+    </div>
+  {{/each}}
+  <div class="variant-images-container">
+    {{#each product.variants}}
+      <div class="variant-thumbnail">
+        <img src="{{this.thumbnail_image_url}}" alt="{{this.title}}" onclick="showVariant('{{../product.id}}', '{{this.SKU}}');"/>
+        {{#if ../admin}}
+          <!-- Removed until functionality is ready
+          <button class="edit-variant-btn" id="edit-variant-btn-{{this.SKU}}" onclick="toggleEditVariant('{{../product.id}}', '{{this.SKU}}');">Edit</button>
+          -->
+          <form method="POST" action="/products/{{../../product.id}}/variants/{{this.SKU}}?_method=DELETE"/>
+            <input class="remove-variant-btn" type="submit" value="x"/>
+          </form>
+        {{/if}}
+      </div>
+    {{/each}}
+  </div>
+  {{#each product.variants}}
+    <div id="product-{{../product.id}}-variant-card-{{this.SKU}}" class="variant-card {{#unless @first}}ak-hidden{{/unless}}">
+      <ul class="ak-ul">
+        <li>Name: {{../product.name}} {{#if this.title}}({{this.title}}){{/if}}</li>
+        <li>Category: <a href="/products/category/{{../product.category}}">{{../product.category}}</a></li>
+        <li>Price: {{fmt_price this.price}}</li>
+        <li><p>{{this.description}}</p></li>
+        {{#if this.attributes}}
+          <li><p>{{this.attributes}}</p></li>
+        {{/if}}
+      </ul>
+      <form method="POST" action="/cart">
+        <input type="hidden" name="product_id" value="{{../product.id}}"/>
+        <input type="hidden" name="variant_SKU" value="{{this.SKU}}"/>
+        <input type="hidden" name="quantity" value="1"/>
+        <input type="submit" value="Add to Cart" class="cart-btn"/>
+      </form>
+    </div>
+  {{/each}}
 </div>
 
 <script>
-function editProduct(product_id) {
-  $('#product-card-' + product_id).toggle();
+function toggleEditProduct(product_id) {
   $('#edit-form-' + product_id).toggle();
-  if($('#edit-button-' + product_id).text() == 'Edit Product') {
-    $('#edit-button-' + product_id).text('Cancel Editing');
+  if($('#edit-btn-' + product_id).text() == 'Edit Product') {
+    $('#edit-btn-' + product_id).text('Cancel Editing');
   } else {
-    $('#edit-button-' + product_id).text('Edit Product');
+    $('#edit-btn-' + product_id).text('Edit Product');
+  }
+}
+function showVariant(product_id, variant_SKU) {
+  $("[id*='product-" + product_id + "-images-container-']").hide();
+  $("[id*='product-" + product_id + "-variant-card-']").hide();
+  $('#product-' + product_id + '-images-container-' + variant_SKU).show();
+  $('#product-' + product_id + '-variant-card-' + variant_SKU).show();
+  $('#cart-' + product_id + '-variant-id').val(variant_SKU);
+  $('#' + product_id + '-new-image-variant-id').val(variant_SKU);
+}
+function changeProductImage(variant_SKU, image_url) {
+  $('#large-image-' + variant_SKU).prop('src', image_url);
+}
+function toggleAddVariant(product_id) {
+  if($('#add-variant-form-' + product_id).is(':visible')) {
+    $('#add-variant-btn-' + product_id).text('Add Variant');
+    $('#add-variant-form-' + product_id).hide();
+  } else {
+    $('#add-variant-btn-' + product_id).text('Hide Add Variant')
+    $('#add-variant-form-' + product_id).show();
+  }
+}
+function toggleAddImage(product_id) {
+  if($('#add-product-image-form-' + product_id).is(':visible')) {
+    $('#add-product-image-btn-' + product_id).text('Add Product Image');
+    $('#add-product-image-form-' + product_id).hide();
+  } else {
+    $('#add-product-image-btn-' + product_id).text('Hide Add Product Image')
+    $('#add-product-image-form-' + product_id).show();
   }
 }
 </script>

@@ -1,10 +1,10 @@
 <h1>{{title}}</h1>
 <div class="checkout-container">
   <div class="login-container">
-    <form method="POST" action="" class="ak-form">
+    <form method="POST" action="">
       <label for="email">Enter your Email Address</label>
-      <input type="hidden" name="cart_id" value="{{#exists cart_id}}{{cart_id}}{{/exists}}"/>
-      <input type="email" name="email" value=""> </br>
+      <input type="hidden" name="cart_id" value="{{cart_id}}"/>
+      <input type="email" name="email" value="" required> </br>
       <label for="account">Continue as Guest</label>
       <input type="radio" name="account" value="guest" {{#unless user}}checked{{/unless}}></br>
       <label for="account">I have an Account and Password</label>
@@ -13,18 +13,18 @@
       <input type="submit" value="Continue to Checkout">
     </form>
     <a href="/auth/facebook?return_to=/checkout/account">Login with Facebook</a></br>
-    <!--<a href="/auth/twitter">Login with Twitter</a>-->
+    <a href="/auth/twitter">Login with Twitter</a>
     <a href="/auth/google?return_to=/checkout/account">Login with Google+</a>
   </div>
 </div>
 <script>
 $(document).ready(function () {
-  $("input[name=account]:radio").change(function () {
+  $('input[name=account]:radio').change(function() {
     if ($("#radio-user").prop('checked')) {
       $('#user-password:input').show();
     } else {
       $('#user-password:input').hide();
     }
-  })
+  });
 });
 </script>

@@ -1,5 +1,4 @@
 <h1>{{title}}</h1>
-<h2>Saved Addresses</h2>
 {{> address_form 'ak-hidden ak-form'}}
 <h3>Default Shipping Address: {{user.default_address}}</h3>
 
@@ -36,19 +35,12 @@
       <input type="checkbox" name="default_address" {{#unless default_address}} checked {{/unless}}/>
       <input type="submit" value="Submit Changes"/>
     </form>
-    <form method="POST" action="/user/addresses/{{this.id}}?_method=PUT">
-      <input type="hidden" name="default_address" value="true"/>
-      <input type="hidden" name="nickname" value="{{this.nickname}}"/>
-      <input type="hidden" name="first_name" value="{{this.first_name}}"/>
-      <input type="hidden" name="last_name" value="{{this.last_name}}"/>
-      <input type="hidden" name="street_line_1" value="{{this.street_line_1}}"/>
-      <input type="hidden" name="street_line_2" value="{{this.street_line_2}}"/>
-      <input type="hidden" name="city" value="{{this.city}}"/>
-      <input type="hidden" name="state" value="{{this.state}}"/>
-      <input type="hidden" name="zip_code" value="{{this.zip_code}}"/>
-      <input type="hidden" name="country" value="{{this.country}}"/>
-      <input type="submit" value="Make Default Address">
-    </form>
+    {{#ifCond this.id '!=' ../user.default_address}}
+      <form method="POST" action="/user/addresses/default">
+        <input type="hidden" name="address_id" value="{{this.id}}"/>
+        <input type="submit" value="Make Default Address">
+      </form>
+    {{/ifCond}}
     <button onclick="$(this).hide(); $('#submit-changes-{{this.id}}').show(); $('#readable-{{this.id}}').hide();">Edit Address</button>
     <form method="POST" action="/user/addresses/{{this.id}}?_method=DELETE">
       <input type="submit" value="Remove Address"/>

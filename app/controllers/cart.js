@@ -22,6 +22,7 @@ router.get('/cart', function(req, res, next) {
         }
       })
       .exec(function(err, user) {
+        if(err) return next(err);
         res.render('cart', {
           title: 'User Cart',
           cart: user.cart
@@ -32,6 +33,7 @@ router.get('/cart', function(req, res, next) {
       .findById(req.session.cart_id)
       .populate('items.product')
       .exec(function(err, cart) {
+        if(err) return next(err);
         res.render('cart', {
           title: 'Guest Cart',
           cart: cart
@@ -48,21 +50,22 @@ router.get('/cart', function(req, res, next) {
 /* Endpoint to add item to cart */
 router.post('/cart', function(req, res, next) {
   var product_id = req.body.product_id;
+  var variant_SKU = req.body.variant_SKU;
   var quantity = parseInt(req.body.quantity);
 
   if(req.user) {
-    req.user.cart.addItem(product_id, quantity, function(err) {
+    req.user.cart.addItem(product_id, variant_SKU, quantity, function(err) {
       res.redirect('/cart');
     });
   } else if(req.session.cart_id) {
     Cart.findById(req.session.cart_id, function(err, cart) {
-      cart.addItem(product_id, quantity, function(err) {
+      cart.addItem(product_id, variant_SKU, quantity, function(err) {
         res.redirect('/cart');
       });
     });
   } else {
     var cart = new Cart();
-    cart.addItem(product_id, quantity, function(err) {
+    cart.addItem(product_id, variant_SKU, quantity, function(err) {
       req.session.cart_id = cart.id;
       res.redirect('/cart');
     });
@@ -72,21 +75,22 @@ router.post('/cart', function(req, res, next) {
 /* Endpoint to edit cart item */
 router.put('/cart/:product_id', function(req, res, next) {
   var product_id = req.params.product_id;
+  var variant_SKU = req.body.variant_SKU;
   var quantity = parseInt(req.body.quantity);
 
   if(req.user) {
-    req.user.cart.updateItem(product_id, quantity, function(err) {
+    req.user.cart.updateItem(product_id, variant_SKU, quantity, function(err) {
       res.redirect('/cart');
     });
   } else if(req.session.cart_id) {
     Cart.findById(req.session.cart_id, function(err, cart) {
-      cart.updateItem(product_id, quantity, function(err) {
+      cart.updateItem(product_id, variant_SKU, quantity, function(err) {
         res.redirect('/cart');
       });
     });
   } else {
     var cart = new Cart();
-    cart.addItem(product_id, quantity, function(err) {
+    cart.addItem(product_id, variant_SKU, quantity, function(err) {
       req.session.cart_id = cart.id;
       res.redirect('/cart');
     });
@@ -96,14 +100,15 @@ router.put('/cart/:product_id', function(req, res, next) {
 /* Endpoint to remove cart item */
 router.delete('/cart/:product_id', function(req, res, next) {
   var product_id = req.params.product_id;
+  var variant_SKU = req.body.variant_SKU;
 
   if(req.user) {
-    req.user.cart.removeItem(product_id, function(err) {
+    req.user.cart.removeItem(product_id, variant_SKU, function(err) {
       res.redirect('/cart');
     });
   } else if(req.session.cart_id) {
     Cart.findById(req.session.cart_id, function(err, cart) {
-      cart.removeItem(product_id, function(err) {
+      cart.removeItem(product_id, variant_SKU, function(err) {
         res.redirect('/cart');
       });
     });

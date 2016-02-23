@@ -5,10 +5,10 @@
   <input type="email" id="email" name="email" placeholder="email"/>
   <input type="password" name="password" placeholder="password"/>
   <input type="submit" value="Log In"/>
-  <a href="/user/forgotten_password?email=" onclick="document.location.href = $(this).attr('href')+ encodeURIComponent($('#email').val()); return false;">
+  <a href="/user/password/forgot?email=" onclick="document.location.href = $(this).attr('href')+ encodeURIComponent($('#email').val()); return false;">
     Forgot your password?
   </a>
 </form>
 <a href="/auth/facebook">Login with Facebook</a>
-<!--<a href="/auth/twitter">Login with Twitter</a>-->
+<a href="/auth/twitter">Login with Twitter</a>
 <a href="/auth/google">Login with Google+</a>
