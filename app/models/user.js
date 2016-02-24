@@ -8,9 +8,9 @@ Cart = mongoose.model('Cart'),
   braintree = require('braintree'),
   gateway = braintree.connect({
     environment: braintree.Environment.Sandbox,
-    merchantId: process.env.BRAINTREE_MERCHANT_ID, // sandbox
-    publicKey: process.env.BRAINTREE_PUBLIC_KEY, // sandbox
-    privateKey: process.env.BRAINTREE_PRIVATE_KEY // sandbox
+    merchantId: process.env.BRAINTREE_MERCHANT_ID,
+    publicKey: process.env.BRAINTREE_PUBLIC_KEY,
+    privateKey: process.env.BRAINTREE_PRIVATE_KEY
   });
 
 var User = new mongoose.Schema({
@@ -179,7 +179,7 @@ User.methods.setupCustomer = function(customer, done) {
       },
       function(err, result) {
         if (err)
-          console.log("Error setting new payment method to default");
+          console.log("Error setting new payment method to default: ", err);
         done(err);
       });
   });

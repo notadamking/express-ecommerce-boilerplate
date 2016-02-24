@@ -399,6 +399,7 @@ router.post('/checkout/review', function(req, res, next) {
             return next(err);
           if (!result.success) {
             req.flash('error', 'Transaction could not be completed.');
+            console.log("\nResult: ", result);
             return res.redirect('/');
           } else {
             order.status = 'paid';
