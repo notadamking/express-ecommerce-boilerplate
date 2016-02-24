@@ -1,38 +1,84 @@
-var mongoose = require('mongoose'), Address = mongoose.model('Address'),
-    Cart = mongoose.model('Cart'), Coupon = mongoose.model('Coupon');
+var mongoose = require('mongoose'),
+  Address = mongoose.model('Address'),
+  Cart = mongoose.model('Cart'),
+  Coupon = mongoose.model('Coupon');
 
 var Order = new mongoose.Schema({
-  cart : {type : mongoose.Schema.Types.ObjectId, ref : 'Cart', unique : true},
-  user : {type : mongoose.Schema.Types.ObjectId, ref : 'User'},
-  currency : {type : String, required : true, default : 'USD'},
-  email : {type : String, required : true},
-  billing : {
-    address : {type : mongoose.Schema.Types.ObjectId, ref : 'Address'},
-    transaction_id : String,
-    payment_type : {type : String, enum : [ 'credit', 'paypal', 'bitcoin' ]},
-    price : {
+  cart: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Cart',
+    unique: true
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  currency: {
+    type: String,
+    required: true,
+    default: 'USD'
+  },
+  email: {
+    type: String,
+    required: true
+  },
+  billing: {
+    address: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Address'
+    },
+    transaction_id: String,
+    payment_type: {
+      type: String,
+      enum: ['credit', 'paypal', 'bitcoin']
+    },
+    price: {
       // all prices stored as integers ($49.00 = 4900)
-      subtotal : {type : Number, default : 0},
-      taxes : {type : Number, default : 0},
-      shipping : {type : Number, default : 0},
-      discount : {type : Number, default : 0},
-      total : {type : Number, default : 0}
+      subtotal: {
+        type: Number,
+        default: 0
+      },
+      taxes: {
+        type: Number,
+        default: 0
+      },
+      shipping: {
+        type: Number,
+        default: 0
+      },
+      discount: {
+        type: Number,
+        default: 0
+      },
+      total: {
+        type: Number,
+        default: 0
+      }
     }
   },
-  shipping : {
-    address : {type : mongoose.Schema.Types.ObjectId, ref : 'Address'},
-    additional_information : String
+  shipping: {
+    address: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Address'
+    },
+    additional_information: String
   },
-  status : {
-    type : String,
-    enum : [
+  status: {
+    type: String,
+    enum: [
       'unpaid', 'paid', 'cancelled', 'shipped', 'delivered', 'expecting_return',
       'returned'
     ],
-    default : 'unpaid'
+    default: 'unpaid'
   },
-  date_created : {type : Date, default : Date.now},
-  date_updated : {type : Date, default : Date.now}
+  date_created: {
+    type: Date,
+    default: Date.now
+  },
+  date_updated: {
+    type: Date,
+    default: Date.now
+  }
 });
 
 Order.pre('update', function(next) {
@@ -42,12 +88,16 @@ Order.pre('update', function(next) {
 
 Order.statics.createOrder = function(order, user, done) {
   var self = this;
-  this.model('Order').findOne({cart : order.cart.id}, function(err, db_order) {
+  this.model('Order').findOne({
+    cart: order.cart.id
+  }, function(err, db_order) {
     if (db_order) {
       console.log("Order with that cart_id already exists.");
       if (db_order.email != order.email) {
-        db_order.update({email : order.email}, function(err) {
-          if(err)
+        db_order.update({
+          email: order.email
+        }, function(err) {
+          if (err)
             console.log("Error updating order email: ", err);
           done(err, db_order);
         });
@@ -56,19 +106,19 @@ Order.statics.createOrder = function(order, user, done) {
       }
     } else {
       order = new self({
-        cart : order.cart.id,
-        email : order.email
+        cart: order.cart.id,
+        email: order.email
       });
-      if(user)
+      if (user)
         order.user = user.id;
       order.save(function(err) {
-        if(err)
+        if (err)
           console.log("Error saving new order: ", err);
-        if(!user) {
+        if (!user) {
           done(err, order);
         } else {
           user.addOrder(order, function(err) {
-            if(err)
+            if (err)
               console.log("Error adding order to user: ", err);
             done(err, order);
           });
@@ -78,54 +128,78 @@ Order.statics.createOrder = function(order, user, done) {
   });
 }
 
+Order.statics.findUserOrdersPopulated = function(user, done) {
+  this.model('Order').find({
+      user: user.id
+    })
+    .populate({
+      path: 'cart',
+      populate: {
+        path: 'items.product',
+        model: 'Product'
+      }
+    })
+    .populate('shipping.address')
+    .populate('billing.address')
+    .exec(done);
+}
+
 Order.statics.findPopulated = function(order, done) {
   this.model('Order').findOne(order)
-      .populate({
-        path : 'cart',
-        populate : {path : 'items.product', model : 'Product'}
-      })
-      .populate('user')
-      .populate('shipping.address')
-      .populate('billing.address')
-      .exec(done);
+    .populate({
+      path: 'cart',
+      populate: {
+        path: 'items.product',
+        model: 'Product'
+      }
+    })
+    .populate('user')
+    .populate('shipping.address')
+    .populate('billing.address')
+    .exec(done);
 }
 
 Order.statics.findByIdPopulated = function(order_id, done) {
   this.model('Order').findById(order_id)
-      .populate({
-        path : 'cart',
-        populate : {path : 'items.product', model : 'Product'}
-      })
-      .populate('user')
-      .populate('shipping.address')
-      .populate('billing.address')
-      .exec(done);
+    .populate({
+      path: 'cart',
+      populate: {
+        path: 'items.product',
+        model: 'Product'
+      }
+    })
+    .populate('user')
+    .populate('shipping.address')
+    .populate('billing.address')
+    .exec(done);
 }
 
 Order.methods.calculatePrice = function(coupon_code, done) {
   var price = 0;
-  for(var i = 0; i < this.cart.items.length; i++) {
+  for (var i = 0; i < this.cart.items.length; i++) {
     price += this.cart.items[i].variant.price * this.cart.items[i].quantity;
   }
   this.billing.price.subtotal = price;
   this.billing.price.total = price;
-  if(!coupon_code || coupon_code == '') {
+  if (!coupon_code || coupon_code == '') {
     this.save(function(err) {
-      if(err) console.log("Error saving order with empty coupon");
+      if (err) console.log("Error saving order with empty coupon");
       done(err);
     });
   } else {
     var self = this;
-    Coupon.findOne({ public_code: coupon_code.toLowerCase() }, function(err, coupon) {
-      if(err) done(err);
-      if(!coupon) {
+    Coupon.findOne({
+      public_code: coupon_code.toLowerCase()
+    }, function(err, coupon) {
+      if (err) done(err);
+      if (!coupon) {
         self.save(function(err) {
-          if(err) console.log("Error saving order invalid coupon.");
+          if (err) console.log("Error saving order invalid coupon.");
           done(err, 'Invalid coupon.');
         });
       } else {
         coupon.applyToOrder(self, function(err) {
-          if(err) console.log("Error saving order after adding coupon.");
+          if (err) console.log("Error saving order after adding coupon.");
           done(err, 'Coupon successfully applied.');
         });
       }
@@ -133,36 +207,4 @@ Order.methods.calculatePrice = function(coupon_code, done) {
   }
 }
 
-function getDecimalPrice(price) {
-  return (price / 100).toFixed(2);
-}
-
-Order.virtual('displaySubtotal').get(function() {
-  //TODO add currency support
-  return '$' + getDecimalPrice(this.billing.price.subtotal);
-});
-
-Order.virtual('displayTaxes').get(function() {
-  // TODO add currency support
-  return '$' + getDecimalPrice(this.billing.price.taxes);
-});
-
-Order.virtual('displayShipping').get(function() {
-  // TODO add currency support
-  return '$' + getDecimalPrice(this.billing.price.shipping);
-});
-
-Order.virtual('displayDiscount').get(function() {
-  // TODO add currency support
-  return '$' + getDecimalPrice(this.billing.price.discount);
-});
-
-Order.virtual('displayTotal').get(function() {
-  // TODO add currency support
-  return '$' + getDecimalPrice(this.billing.price.total);
-});
-
-Order.virtual('decimalTotal')
-    .get(function() { return getDecimalPrice(this.billing.price.total); })
-
-        module.exports = mongoose.model('Order', Order);
+module.exports = mongoose.model('Order', Order);

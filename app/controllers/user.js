@@ -1,8 +1,7 @@
 var express = require('express'),
   router = express.Router(),
   uuid = require('node-uuid'),
-  sendgrid = require('sendgrid')(
-    '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'),
+  sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY),
   mongoose = require('mongoose'),
   User = mongoose.model('User'),
   Order = mongoose.model('Order'),
@@ -21,27 +20,18 @@ module.exports = function(app) {
 
 /* Endpoint to confirm a user's email address */
 router.get('/user/confirm_email', function(req, res, next) {
-  var token = req.query.token;
-  if (!token) {
-    res.redirect('/');
-  }
-  User.findOneAndUpdate({
-      confirm_email_token: token
-    }, {
-      confirmed_email: true
-    },
-    function(err, user) {
-      if (err)
-        return next(err);
-      if (!user) {
-        req.flash('info', 'Invalid email confirmation token.');
-        res.redirect('/');
-      } else {
-        res.render('user/confirmed_email', {
-          title: 'Email Confirmed'
-        });
-      }
-    });
+  User.confirmEmail(req.query.token, function(err, user) {
+    if (err)
+      return next(err);
+    if (!user) {
+      req.flash('error', 'Invalid email confirmation token.');
+      res.redirect('/');
+    } else {
+      res.render('user/confirmed_email', {
+        title: 'Email Confirmed'
+      });
+    }
+  });
 });
 
 /* Endpoint to request a user's password to be reset */
@@ -55,41 +45,16 @@ router.get('/user/password/forgot', function(req, res, next) {
 
 /* Endpoint to post a user's password reset request */
 router.post('/user/password/forgot', function(req, res, next) {
-  var email = req.body.email;
-  var expires = new Date();
-  expires.setDate(expires.getDate() + 1);
-  var token = uuid.v4();
-  User.findOneAndUpdate({
-      email: email
-    }, {
-      password_reset_token: token,
-      password_reset_expiration: expires
-    },
-    function(err, user) {
-      if (err)
-        return next(err);
-      if (!user) {
-        req.flash('info',
-          'That email address is not registered to any user.');
-        return res.redirect('/user/password/forgot');
-      }
-      var reset_link =
-        'http://localhost:3000/user/password/reset?token=' + token;
-      sendgrid.send({
-          to: email,
-          from: 'support@localhost',
-          subject: 'Password Reset Request',
-          html: '<body><a href="' + reset_link +
-            '">Reset your password</a></body>'
-        },
-        function(err) {
-          if (err)
-            return next(err);
-          res.redirect(
-            '/user/password/reset_instructions?email=' +
-            encodeURIComponent(email));
-        });
-    });
+  User.sendResetEmail(req.body.email, function(err, user) {
+    if (err)
+      return next(err);
+    if (!user) {
+      req.flash('error', 'That email address is not registered to any user.');
+      res.redirect('/user/password/forgot');
+    } else {
+      res.redirect('/user/password/reset_instructions?email=' + encodeURIComponent(user.email));
+    }
+  });
 });
 
 /* Endpoint to instruct a user on how to finish resetting their password */
@@ -102,21 +67,11 @@ router.get('/user/password/reset_instructions', function(req, res, next) {
 
 /* Endpoint to instruct a user on how to finish resetting their password */
 router.get('/user/password/reset', function(req, res, next) {
-  var token = req.query.token;
-  if (!token) {
-    res.redirect('/');
-  }
-  User.findOne({
-    password_reset_token: token
-  }, function(err, user) {
+  User.validatePasswordResetToken(req.query.token, function(err, user) {
     if (err)
       return next(err);
-    var date = new Date();
     if (!user) {
-      req.flash('info', 'Invalid password reset token.');
-      res.redirect('/');
-    } else if (date > user.password_reset_expiration) {
-      req.flash('info', 'Password reset token has expired.');
+      req.flash('error', 'Invalid password reset token.');
       res.redirect('/');
     } else {
       res.render('user/password/reset', {
@@ -129,48 +84,25 @@ router.get('/user/password/reset', function(req, res, next) {
 
 /* Endpoint to post a user's new password for reset */
 router.post('/user/password/reset', function(req, res, next) {
-  var token = req.body.token;
-  var new_password = req.body.new_password;
-  var new_password_again = req.body.new_password_again;
-  if (new_password !== new_password_again) {
-    req.flash('info', 'Passwords do not match.');
-    res.redirect('/user/password/reset?token=' + token);
+  if (req.body.new_password !== req.body.new_password_again) {
+    req.flash('error', 'Passwords do not match.');
+    res.redirect('/user/password/reset?token=' + req.body.token);
   } else {
-    User.findOne({
-      password_reset_token: token
-    }, function(err, user) {
+    User.resetPassword(req.body.token, req.body.new_password, function(err, user, password_err) {
       if (err)
         return next(err);
-      var date = new Date();
       if (!user) {
-        req.flash('info', 'Invalid password reset token.');
+        req.flash('error', 'Invalid password reset token.');
         res.redirect('/');
-      } else if (date > user.password_reset_expiration) {
-        req.flash('info', 'Password reset token has expired.');
+      } else if (password_err) {
+        req.flash('error', 'Invalid password: ' + password_err);
         res.redirect('/');
       } else {
-        user.setPassword(new_password, function(err, user, password_err) {
-          user.password_reset_token = '';
-          user.save(function(err) {
-            req.flash('info', 'Your password has successfully been changed.');
-            sendgrid.send({
-                to: user.email,
-                from: 'support@localhost',
-                subject: 'Password Reset Complete',
-                html: '<body><p>Your password has successfully been changed.</p></body>'
-              },
-              function(err) {
-                if (err)
-                  console.log(
-                    "Error sending password reset success email. ",
-                    err);
-              });
-            req.logIn(user, function(err) {
-              if (err)
-                return next(err);
-              return res.redirect('/user/profile');
-            });
-          });
+        req.flash('success', 'Your password has successfully been changed.');
+        req.logIn(user, function(err) {
+          if (err)
+            return next(err);
+          return res.redirect('/user/profile');
         });
       }
     });
@@ -196,11 +128,6 @@ router.get('/user/profile', function(req, res, next) {
   res.render('user/profile', {
     title: 'User Profile'
   });
-});
-
-/* Endpoint to post a new user profile */
-router.post('/user/profile', function(req, res, next) {
-
 });
 
 /* Endpoint to edit a user's profile */
@@ -245,7 +172,7 @@ router.post('/user/addresses/default', function(req, res, next) {
   req.user.setDefaultAddress(req.body.address_id, function(err) {
     if (err)
       return next(err);
-    req.flash('info', 'Successfully set default address.');
+    req.flash('success', 'Successfully set default address.');
     res.redirect('/user/addresses');
   });
 });
@@ -265,6 +192,7 @@ router.delete('/user/addresses/:address_id', function(req, res, next) {
   req.user.removeAddress(req.params.address_id, function(err) {
     if (err)
       return next(err);
+    req.flash('success', 'Successfully removed address.');
     res.redirect('/user/addresses');
   });
 });
@@ -272,34 +200,21 @@ router.delete('/user/addresses/:address_id', function(req, res, next) {
 /* Endpoint to view a user's saved payment methods */
 router.get('/user/payment_methods', function(req, res, next) {
   if (req.user.braintree_customer_id) {
-    gateway.clientToken.generate({},
-      function(err, response) {
+    gateway.customer.find(req.user.braintree_customer_id,
+      function(err, customer) {
         if (err)
           return next(err);
-        gateway.customer.find(
-          req.user.braintree_customer_id,
-          function(err, customer) {
-            console.log('\nCustomer: ', customer);
-            var default_payment = '';
-            for (var i = 0; i < customer.paymentMethods.length; i++) {
-              if (customer.paymentMethods[i].default) {
-                if (customer.paymentMethods[i].cardType) {
-                  default_payment = customer.paymentMethods[i].cardType +
-                    ' : ' +
-                    customer.paymentMethods[i].maskedNumber;
-                } else {
-                  default_payment =
-                    'PayPal : ' + customer.paymentMethods[i].email;
-                }
-              }
-            }
-            res.render('user/payment_methods', {
-              title: 'User Payment Methods',
-              payment_methods: customer.paymentMethods,
-              default_payment: default_payment,
-              client_token: response.clientToken
-            });
+        gateway.clientToken.generate({
+          customerId: customer.id
+        }, function(err, response) {
+          if (err)
+            return next(err);
+          res.render('user/payment_methods', {
+            title: 'User Payment Methods',
+            client_token: response.clientToken,
+            payment_methods: customer.paymentMethods
           });
+        });
       });
   } else {
     res.render('user/payment_methods', {
@@ -332,58 +247,20 @@ router.post('/user/payment_methods/default', function(req, res, next) {
 
 /* Endpoint to post a new payment method for a user */
 router.post('/user/payment_methods', function(req, res, next) {
-  if (!req.user.braintree_customer_id) {
-    gateway.customer.create({
-        paymentMethodNonce: req.body.payment_method_nonce
-      },
-      function(err, result) {
-        if (result.success) {
-          req.user.braintree_customer_id = result.customer.id;
-          req.user.save(function(err) {
-            if (err)
-              console.log("Error saving BT customer id to user. ", err);
-          });
-          gateway.paymentMethod.update(
-            result.customer.paymentMethods[0].token, {
-              options: {
-                makeDefault: true
-              }
-            },
-            function(err, result) {
-              if (result.success) {
-                req.flash('info', 'Successfully added payment method.');
-                res.redirect('/user/payment_methods');
-              } else {
-                req.flash('error',
-                  'Payment method could not be added to customer.');
-                res.redirect('/user/payment_methods');
-              }
-            });
-        } else {
-          req.flash('error', 'Customer could not be created for user.');
-          res.redirect('/user/payment_methods');
-        }
-      });
-  } else {
-    gateway.paymentMethod.create({
-        customerId: req.user.braintree_customer_id,
-        paymentMethodNonce: req.body.payment_method_nonce,
-        options: {
-          makeDefault: req.body.make_default_payment,
-          failOnDuplicatePaymentMethod: true
-        }
-      },
-      function(err, result) {
-        if (result.success) {
-          req.flash('info', 'Successfully added payment method.');
-          res.redirect('/user/payment_methods');
-        } else {
-          req.flash('error',
-            'Payment method could not be added to customer.');
-          res.redirect('/user/payment_methods');
-        }
-      });
-  }
+  req.user.addPaymentMethod(req.body.payment_method_nonce, req.body.set_default_address, function(err, result) {
+    if(err) {
+      console.log('\nResult: ', result);
+      console.log('\nError: ', err);
+      return next(err);
+    }
+    if (result.success) {
+      req.flash('success', 'Successfully added payment method.');
+      res.redirect('/user/payment_methods');
+    } else {
+      req.flash('error', 'Could not add payment method.');
+      res.redirect('/user/payment_methods');
+    }
+  });
 });
 
 /* Endpoint to delete a payment method for a user */
@@ -397,21 +274,14 @@ router.delete('/user/payment_methods/:token', function(req, res, next) {
 
 /* Endpoint to view a user's orders */
 router.get('/user/orders', function(req, res, next) {
-  User.findById(req.user.id)
-    .populate({
-      path: 'orders',
-      match: {
-        status: {
-          $ne: 'unpaid' // Only select orders if status != 'unpaid'
-        }
-      }
-    })
-    .exec(function(err, user) {
-      res.render('user/orders', {
-        title: "User Orders",
-        orders: user.orders
-      });
+  Order.findUserOrdersPopulated(req.user, function(err, orders) {
+    if (err)
+      return next(err);
+    res.render('user/orders', {
+      title: "User Orders",
+      orders: orders
     });
+  });
 });
 
 /* Endpoint to post a new order */
@@ -434,10 +304,7 @@ router.post('/user/orders', function(req, res, next) {
 
 /* Endpoint to view an order by order id */
 router.get('/user/orders/:order_id', function(req, res, next) {
-  Order.findOne({
-    user: req.user.id,
-    _id: req.params.order_id
-  }, function(err, order) {
+  Order.findByIdPopulated(req.params.order_id, function(err, order) {
     if (err)
       return next(err);
     if (!order) {

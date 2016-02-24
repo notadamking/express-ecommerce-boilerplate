@@ -17,14 +17,14 @@
     <tr>
       <td><a href="/user/orders/{{this.id}}">{{this.id}}</a></td>
       <td>{{this.email}}</td>
-      <td>{{this.displaySubtotal}}</td>
-      <td>{{this.displayTaxes}}</td>
-      <td>{{this.displayShipping}}</td>
-      <td>{{this.displayDiscount}}</td>
-      <td>{{this.displayTotal}}</td>
+      <td>{{fmt_price this.billing.price.subtotal}}</td>
+      <td>{{fmt_price this.billing.price.taxes}}</td>
+      <td>{{fmt_price this.billing.price.shipping}}</td>
+      <td>{{fmt_price this.billing.price.discount}}</td>
+      <td>{{fmt_price this.billing.price.total}}</td>
       <td>{{this.status}}</td>
       <td>{{fmt_date this.date_created}}</td>
-      <td><a href="/user/addresses">{{this.shipping.address}}</a></td>
+      <td><a href="/user/addresses">{{this.shipping.address.id}}</a></td>
       <td><a href="/user/orders/{{this.id}}?change_shipping=1" {{#ifCond status '!=' 'paid'}}class="ak-disabled"{{/ifCond}}>Change Shipping</a></td>
       <td>
         {{#ifCond this.status '==' 'paid'}}
@@ -40,14 +40,14 @@
     <tr>
       <td><a href="/user/orders/{{id}}">{{id}}</a></td>
       <td>{{email}}</td>
-      <td>{{displaySubtotal}}</td>
-      <td>{{displayTaxes}}</td>
-      <td>{{displayShipping}}</td>
-      <td>{{displayDiscount}}</td>
-      <td>{{displayTotal}}</td>
+      <td>{{fmt_price this.billing.price.subtotal}}</td>
+      <td>{{fmt_price this.billing.price.taxes}}</td>
+      <td>{{fmt_price this.billing.price.shipping}}</td>
+      <td>{{fmt_price this.billing.price.discount}}</td>
+      <td>{{fmt_price this.billing.price.total}}</td>
       <td>{{status}}</td>
       <td>{{fmt_date date_created}}</td>
-      <td><a href="/user/addresses">{{this.shipping.address}}</a></td>
+      <td><a href="/user/addresses">{{this.shipping.address.id}}</a></td>
       <td><a href="/user/orders/{{id}}?change_shipping=1" {{#ifCond status '!=' 'paid'}}class="ak-disabled"{{/ifCond}}>Change Shipping</a></td>
       <td>
         {{#ifCond status '==' 'paid'}}
