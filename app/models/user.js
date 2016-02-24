@@ -8,9 +8,9 @@ Cart = mongoose.model('Cart'),
   braintree = require('braintree'),
   gateway = braintree.connect({
     environment: braintree.Environment.Sandbox,
-    merchantId: process.env.MERCHANT_ID,
-    publicKey: process.env.PUBLIC_KEY,
-    privateKey: process.env.PRIVATE_KEY
+    merchantId: "nsp7gtrpf3sh3ycy",// process.env.MERCHANT_ID,
+    publicKey: "qxgdv667ypkbf84q",//process.env.PUBLIC_KEY,
+    privateKey: "637564e928804a1f4f5a348d5640020d"//process.env.PRIVATE_KEY
   });
 
 var User = new mongoose.Schema({
