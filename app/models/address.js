@@ -46,11 +46,11 @@ Address.statics.createNewAddress = function(address, user, done) {
     country: address.country
   });
   new_address.save(function(err) {
-    if (err) console.log("Error saving new address: ", err);
+    if (err)
+      console.log("Error saving new address: ", err);
     if (!user) {
       done(err, new_address);
     } else {
-      console.log("\nUser: ", user);
       user.addAddress(new_address, address.set_default_address, function(err) {
         if (err)
           return next(err);

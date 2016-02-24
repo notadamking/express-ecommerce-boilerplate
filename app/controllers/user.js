@@ -275,6 +275,8 @@ router.delete('/user/payment_methods/:token', function(req, res, next) {
 /* Endpoint to view a user's orders */
 router.get('/user/orders', function(req, res, next) {
   Order.findUserOrdersPopulated(req.user, function(err, orders) {
+    console.log("\nOrders: ", orders);
+    orders = orders.filter(function(o) { return o.status != 'unpaid' });
     if (err)
       return next(err);
     res.render('user/orders', {

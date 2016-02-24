@@ -32,7 +32,7 @@ router.get('/checkout/account', function(req, res, next) {
     });
   } else {
     Order.createOrder({
-      cart: req.user.cart,
+      cart: req.user.cart.id,
       email: req.user.email,
       user: req.user
     }, req.user, function(err, order) {

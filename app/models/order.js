@@ -89,13 +89,14 @@ Order.pre('update', function(next) {
 Order.statics.createOrder = function(order, user, done) {
   var self = this;
   this.model('Order').findOne({
-    cart: order.cart.id
+    cart: order.cart
   }, function(err, db_order) {
     if (db_order) {
       console.log("Order with that cart_id already exists.");
-      if (db_order.email != order.email) {
+      if (db_order.email != order.email || db_order.user != order.user) {
         db_order.update({
-          email: order.email
+          email: (db_order.email != order.email) ? order.email : db_order.email,
+          user: (db_order.user != order.user) ? order.user : db_order.user
         }, function(err) {
           if (err)
             console.log("Error updating order email: ", err);
@@ -106,7 +107,7 @@ Order.statics.createOrder = function(order, user, done) {
       }
     } else {
       order = new self({
-        cart: order.cart.id,
+        cart: order.cart,
         email: order.email
       });
       if (user)

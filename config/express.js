@@ -3,7 +3,7 @@ var express = require('express'),
 
     favicon = require('serve-favicon'),
     logger = require('morgan'),
-    dotenv = require('dotenv'),
+    dotenv = require('dotenv').config(),
     cookieParser = require('cookie-parser'),
     bodyParser = require('body-parser'),
     compress = require('compression'),
@@ -22,7 +22,6 @@ module.exports = function(app, config) {
   var env = process.env.NODE_ENV || 'development';
   app.locals.ENV = env;
   app.locals.ENV_DEVELOPMENT = env == 'development';
-  dotenv.load();
 
   var hbs = exphbs.create({
     extname: '.hbs',

@@ -1,7 +1,6 @@
 var mongoose = require('mongoose'),
   uuid = require('node-uuid'),
-  sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY),
-  passportLocalMongoose = require('passport-local-mongoose');
+  passportLocalMongoose = require('passport-local-mongoose'),
   Cart = mongoose.model('Cart'),
   Order = mongoose.model('Order'),
   Address = mongoose.model('Address'),
@@ -143,6 +142,7 @@ User.statics.resetPassword = function(token, new_password, done) {
           if (!password_err) {
             return done(err, user, password_err);
           } else {
+            var sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY);
             sendgrid.send({
                 to: user.email,
                 from: 'support@localhost',
@@ -257,6 +257,7 @@ User.methods.cancelOrder = function(order_id, done) {
                 order.status = 'cancelled';
                 order.save(function(err) {
                   if (err) console.log('Error saving order after refund: ', err);
+                  var sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY);
                   sendgrid.send({
                     to: self.email,
                     from: 'support@localhost',
@@ -285,6 +286,7 @@ User.methods.cancelOrder = function(order_id, done) {
                 order.status = 'cancelled';
                 order.save(function(err) {
                   if (err) console.log('Error saving order after refund: ', err);
+                  var sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY);
                   sendgrid.send({
                     to: self.email,
                     from: 'support@localhost',
@@ -329,6 +331,7 @@ User.methods.requestOrderReturn = function(order_id, done) {
       });
     } else {
       order.status = 'expecting_return';
+      var sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY);
       sendgrid.send({
         to: self.email,
         from: 'support@localhost',
@@ -492,6 +495,7 @@ User.statics.sendResetEmail = function(email, done) {
     }
     var reset_link =
       'http://localhost:3000/user/password/reset?token=' + token;
+    var sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY);
     sendgrid.send({
         to: email,
         from: 'support@localhost',
