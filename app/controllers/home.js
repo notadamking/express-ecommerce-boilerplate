@@ -1,6 +1,6 @@
 var router = require('express').Router(),
   passport = require('passport'),
-  sendgrid = require('sendgrid')('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'),
+  sendgrid = require('sendgrid')(process.env.SENGRID_API_KEY),
   mongoose = require('mongoose'),
   User = mongoose.model('User');
 

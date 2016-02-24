@@ -1,6 +1,6 @@
 var mongoose = require('mongoose'),
   uuid = require('node-uuid'),
-  sendgrid = require('sendgrid')('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'),
+  sendgrid = require('sendgrid')(process.env.SENGRID_API_KEY),
   passportLocalMongoose = require('passport-local-mongoose');
 Cart = mongoose.model('Cart'),
   Order = mongoose.model('Order'),
@@ -8,9 +8,9 @@ Cart = mongoose.model('Cart'),
   braintree = require('braintree'),
   gateway = braintree.connect({
     environment: braintree.Environment.Sandbox,
-    merchantId: '37rkyn2n5tszjskc', //sandbox
-    publicKey: 'kqdb8hgwrh6xt582', //sandbox
-    privateKey: '1bd6b731bf7a3d8d79dfd97455c8aa95' //sandbox
+    merchantId: process.env.MERCHANT_ID, //sandbox
+    publicKey: process.env.PUBLIC_KEY, //sandbox
+    privateKey: process.env.PRIVATE_KEY //sandbox
   });
 
 var User = new mongoose.Schema({
