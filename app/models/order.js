@@ -208,7 +208,7 @@ Order.methods.calculatePrice = function(coupon_code, done) {
 }
 
 Order.virtual('decimalTotal').get(function () {
-  return this.billing.price.total / 100;
+  return (this.billing.price.total / 100).toFixed(2);
 });
 
 module.exports = mongoose.model('Order', Order);

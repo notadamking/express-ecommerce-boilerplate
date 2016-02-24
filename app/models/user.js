@@ -2,7 +2,7 @@ var mongoose = require('mongoose'),
   uuid = require('node-uuid'),
   sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY),
   passportLocalMongoose = require('passport-local-mongoose');
-Cart = mongoose.model('Cart'),
+  Cart = mongoose.model('Cart'),
   Order = mongoose.model('Order'),
   Address = mongoose.model('Address'),
   braintree = require('braintree'),
@@ -243,7 +243,7 @@ User.methods.cancelOrder = function(order_id, done) {
       });
     } else {
       gateway.transaction.find(order.billing.transaction_id, function(err, transaction) {
-        if (err) console.log("Error refunding order: ", err);
+        if (err) console.log("Error finding transaction: ", err);
         if (!transaction) {
           done(err, {
             type: 'error',

@@ -51,6 +51,7 @@ router.post('/register', function(req, res, next) {
       req.user.getCheckoutToken(function(err, token) {
         if(err) return next(err);
         if(token) req.session.checkout_token = token;
+        req.flash('success', 'Successfully registered a new account. A confirmation email has been sent to ' + user.email + '.');
         res.redirect('/');
       });
     });
