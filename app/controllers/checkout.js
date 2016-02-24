@@ -9,9 +9,9 @@ var router = require('express').Router(),
   braintree = require('braintree'),
   gateway = braintree.connect({
     environment: braintree.Environment.Sandbox,
-    merchantId: process.env.MERCHANT_ID, // sandbox
-    publicKey: process.env.PUBLIC_KEY, // sandbox
-    privateKey: process.env.PRIVATE_KEY // sandbox
+    merchantId: process.env.MERCHANT_ID,
+    publicKey: process.env.PUBLIC_KEY,
+    privateKey: process.env.PRIVATE_KEY
   });
 
 module.exports = function(app) {
