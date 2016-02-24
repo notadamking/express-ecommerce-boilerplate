@@ -128,6 +128,22 @@ Order.statics.createOrder = function(order, user, done) {
   });
 }
 
+Order.statics.findUserOrdersPopulated = function(user, done) {
+  this.model('Order').find({
+      user: user.id
+    })
+    .populate({
+      path: 'cart',
+      populate: {
+        path: 'items.product',
+        model: 'Product'
+      }
+    })
+    .populate('shipping.address')
+    .populate('billing.address')
+    .exec(done);
+}
+
 Order.statics.findPopulated = function(order, done) {
   this.model('Order').findOne(order)
     .populate({
@@ -191,38 +207,8 @@ Order.methods.calculatePrice = function(coupon_code, done) {
   }
 }
 
-function getDecimalPrice(price) {
-  return (price / 100).toFixed(2);
-}
-
-Order.virtual('displaySubtotal').get(function() {
-  //TODO add currency support
-  return '$' + getDecimalPrice(this.billing.price.subtotal);
+Order.virtual('decimalTotal').get(function () {
+  return (this.billing.price.total / 100).toFixed(2);
 });
-
-Order.virtual('displayTaxes').get(function() {
-  // TODO add currency support
-  return '$' + getDecimalPrice(this.billing.price.taxes);
-});
-
-Order.virtual('displayShipping').get(function() {
-  // TODO add currency support
-  return '$' + getDecimalPrice(this.billing.price.shipping);
-});
-
-Order.virtual('displayDiscount').get(function() {
-  // TODO add currency support
-  return '$' + getDecimalPrice(this.billing.price.discount);
-});
-
-Order.virtual('displayTotal').get(function() {
-  // TODO add currency support
-  return '$' + getDecimalPrice(this.billing.price.total);
-});
-
-Order.virtual('decimalTotal')
-  .get(function() {
-    return getDecimalPrice(this.billing.price.total);
-  })
 
 module.exports = mongoose.model('Order', Order);

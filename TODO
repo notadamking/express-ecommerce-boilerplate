@@ -90,6 +90,8 @@ Other:
   Code:
     ☐ Refactor checkout.js (especially billing) (coroutines?)
     ☐ Restructure imports more efficiently
+    ☐ Refactor from express to koa
+    ☐ Write tests
 
   Newsletter:
     ☐ All visitors should be able to sign up for a newsletter

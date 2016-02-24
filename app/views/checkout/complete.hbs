@@ -2,11 +2,11 @@
 <div class="cart-container">
   <h2>Cart</h2>
   {{> cart_table cart=order.cart complete="true"}}
-  <h3>Subtotal: {{order.displaySubtotal}}</h3>
-  {{#ifCond order.billing.price.discount '>' 0}}
-    <h3>Discount: {{order.displayDiscount}}</h3>
+  <h3>Subtotal: {{fmt_price order.billing.price.subtotal}}</h3>
+  {{#ifCond order.billing.price.price.discount '>' 0}}
+    <h3>Discount: {{fmt_price order.billing.price.discount}}</h3>
   {{/ifCond}}
-  <h3>Total: {{order.displayTotal}}</h3>
+  <h3>Total: {{fmt_price order.billing.price.total}}</h3>
 </div>
 <div class="shipping-container">
   <h2>Shipping</h2>

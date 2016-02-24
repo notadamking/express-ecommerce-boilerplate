@@ -1,8 +1,8 @@
 var mongoose = require('mongoose'),
   uuid = require('node-uuid'),
-  sendgrid = require('sendgrid')(process.env.SENGRID_API_KEY),
+  sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY),
   passportLocalMongoose = require('passport-local-mongoose');
-Cart = mongoose.model('Cart'),
+  Cart = mongoose.model('Cart'),
   Order = mongoose.model('Order'),
   Address = mongoose.model('Address'),
   braintree = require('braintree'),
@@ -106,6 +106,61 @@ User.pre('update', function(next) {
   next();
 });
 
+User.statics.confirmEmail = function(token, done) {
+  this.model('User').findOneAndUpdate({
+    confirm_email_token: token
+  }, {
+    confirmed_email: true
+  }, done);
+}
+
+User.statics.validatePasswordResetToken = function(token, done) {
+  this.model('User').findOne({
+    password_reset_token: token
+  }, function(err, user) {
+    if (err)
+      console.log('Error finding user by password reset token: ', err);
+    var date = new Date();
+    if (!user || date > user.password_reset_expiration) {
+      done(err, null);
+    } else {
+      done(err, user);
+    }
+  });
+}
+
+User.statics.resetPassword = function(token, new_password, done) {
+  this.validatePasswordResetToken(req.body.token, function(err, user) {
+    if (err)
+      console.log('Error validating password reset token: ', err);
+    if (!user) {
+      return done(err, null);
+    } else {
+      user.setPassword(new_password, function(err, user, password_err) {
+        user.password_reset_token = '';
+        user.save(function(err) {
+          if (err) console.log('Error saving user after updating password reset token: ', err);
+          if (!password_err) {
+            return done(err, user, password_err);
+          } else {
+            sendgrid.send({
+                to: user.email,
+                from: 'support@localhost',
+                subject: 'Password Reset Complete',
+                html: '<body><p>Your password has successfully been changed.</p></body>'
+              },
+              function(err) {
+                if (err)
+                  console.log("Error sending password reset success email. ", err);
+                done(err, user, password_err);
+              });
+          }
+        });
+      });
+    }
+  });
+}
+
 User.methods.validateCheckoutToken = function(token) {
   var now = new Date();
   return this.checkout_token == token && now < this.checkout_expiration;
@@ -124,7 +179,7 @@ User.methods.setupCustomer = function(customer, done) {
       },
       function(err, result) {
         if (err)
-          console.log("Error setting new payment method to default");
+          console.log("Error setting new payment method to default: ", err);
         done(err);
       });
   });
@@ -188,7 +243,7 @@ User.methods.cancelOrder = function(order_id, done) {
       });
     } else {
       gateway.transaction.find(order.billing.transaction_id, function(err, transaction) {
-        if (err) console.log("Error refunding order: ", err);
+        if (err) console.log("Error finding transaction: ", err);
         if (!transaction) {
           done(err, {
             type: 'error',
@@ -369,6 +424,43 @@ User.methods.removeAddress = function(address_id, done) {
   });
 }
 
+User.methods.addPaymentMethod = function(nonce, make_default, done) {
+  if (!this.braintree_customer_id) {
+    gateway.customer.create({
+        paymentMethodNonce: nonce
+      },
+      function(err, result) {
+        if(err)
+          console.log("Error creating customer for user: ", err);
+        if (result.success) {
+          this.braintree_customer_id = result.customer.id;
+          this.save(function(err) {
+            if (err)
+              console.log("Error saving BT customer id to user. ", err);
+          });
+          gateway.paymentMethod.update(
+            result.customer.paymentMethods[0].token, {
+              options: {
+                makeDefault: true
+              }
+            }, done);
+        } else {
+          console.log('Could not create customer for user: ', result);
+          done(err, result);
+        }
+      });
+  } else {
+    gateway.paymentMethod.create({
+        customerId: this.braintree_customer_id,
+        paymentMethodNonce: nonce,
+        options: {
+          makeDefault: make_default,
+          failOnDuplicatePaymentMethod: true
+        }
+      }, done);
+  }
+}
+
 User.methods.removePaymentMethod = function(token, done) {
   gateway.paymentMethod.delete(token, function(err) {
     if (err) console.log("Error removing payment method for user: ", err);
@@ -384,8 +476,34 @@ User.methods.displayPaymentMethod = function(payment_method) {
   }
 }
 
-User.methods.isAdmin = function() {
-  return this.roles.indexOf('admin') >= 0;
+User.statics.sendResetEmail = function(email, done) {
+  var token = uuid.v4();
+  var expires = new Date();
+  expires.setDate(expires.getDate() + 1);
+  this.model('User').findOneAndUpdate({
+    email: email
+  }, {
+    password_reset_token: token,
+    password_reset_expiration: expires
+  }, function(err, user) {
+    if (err) console.log('Error updating user password reset token: ', err);
+    if (!user) {
+      return done(err, null);
+    }
+    var reset_link =
+      'http://localhost:3000/user/password/reset?token=' + token;
+    sendgrid.send({
+        to: email,
+        from: 'support@localhost',
+        subject: 'Password Reset Request',
+        html: '<body><a href="' + reset_link + '">Reset your password</a></body>'
+      },
+      function(err) {
+        if (err)
+          console.log('Error sending password reset email: ', err);
+        done(err, user);
+      });
+  });
 }
 
 User.plugin(passportLocalMongoose, {

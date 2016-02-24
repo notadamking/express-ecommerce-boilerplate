@@ -1,6 +1,6 @@
 var router = require('express').Router(),
   passport = require('passport'),
-  sendgrid = require('sendgrid')(process.env.SENGRID_API_KEY),
+  sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY),
   mongoose = require('mongoose'),
   User = mongoose.model('User');
 
@@ -51,6 +51,7 @@ router.post('/register', function(req, res, next) {
       req.user.getCheckoutToken(function(err, token) {
         if(err) return next(err);
         if(token) req.session.checkout_token = token;
+        req.flash('success', 'Successfully registered a new account. A confirmation email has been sent to ' + user.email + '.');
         res.redirect('/');
       });
     });

@@ -16,12 +16,14 @@
         <li>Token : {{this.token}}</li>
       </ul>
     {{/if}}
-    {{#unless this.default}}
+    {{#if this.default}}
+      <h4>Default Payment Method</h4>
+    {{else}}
       <form method="POST" action="/user/payment_methods/default">
         <input type="hidden" name="token" value="{{this.token}}"/>
         <input type="submit" value="Make Default Payment Method">
       </form>
-    {{/unless}}
+    {{/if}}
     <form method="POST" action="/user/payment_methods/{{this.token}}?_method=DELETE">
       <input type="submit" value="Remove Payment Method"/>
     </form>
@@ -29,12 +31,12 @@
 {{else}}
   <p>You have no saved payment methods.</p>
 {{/each}}
-<button onclick="$('#new-payment-method-form').show();">Add New Payment Method</button>
+<button onclick="$('#new-payment-method-form').toggle();">Add New Payment Method</button>
 <form class="ak-hidden" id="new-payment-method-form" method="POST" action="">
   <div id="payment-form"></div>
   <input class="ak-hidden" type="checkbox" id="make-default-payment" name="make-default-payment"/>
   <label class="ak-hidden" for="make-default-payment">Set as default payment method?</label></br>
-  <input type="submit" value="Add New Payment Method"/>
+  <input type="submit" value="Add Payment Method"/>
 </form>
 
 <script src="https://js.braintreegateway.com/v2/braintree.js"></script>
