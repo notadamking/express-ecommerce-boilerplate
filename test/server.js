@@ -5,7 +5,6 @@ var should = chai.should();
 
 chai.use(chaiHttp);
 
-
 describe('Users', function() {
   it('should set a SINGLE user`s confirmed_email to true on /user/confirm_email GET');
   it('should  ')
